@@ -86,7 +86,11 @@ export function surfaceArea(geometry: BufferGeometry): number {
  */
 export function analyseManifold(
   geometry: BufferGeometry,
-  epsilon = 1e-6,
+  // Area threshold in scene units squared. Scene units are metres, so this is
+  // one square micrometre: small enough not to discard the genuinely tiny
+  // triangles in a weld bead or a bolt head, which would otherwise be dropped
+  // here and then reported as holes in the surface they came from.
+  epsilon = 1e-12,
 ): ManifoldReport {
   const pos = geometry.getAttribute('position');
   const index = geometry.getIndex();
