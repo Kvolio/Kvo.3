@@ -1,4 +1,4 @@
-import { Mesh, type Material, type Object3D, type Scene } from 'three';
+import { InstancedMesh, Mesh, type Material, type Object3D, type Scene } from 'three';
 import type { MaterialLibrary } from '../materials/MaterialLibrary.js';
 import { CollisionFlags, type CollisionWorld } from '../collision/CollisionWorld.js';
 import type { BuiltAssembly } from '../parts/hull/index.js';
@@ -55,7 +55,6 @@ export function mountAssembly(
   // meshes rather than thousands of objects.
   const fasteners: Object3D[] = [];
   for (const batch of built.context.fasteners.materialize()) {
-    const { InstancedMesh } = sceneClasses();
     const instanced = new InstancedMesh(
       batch.geometry,
       materials.get('machinedSteel'),
@@ -76,12 +75,3 @@ export function mountAssembly(
     collisionTriangleCount: collisionGeometry.getIndex()!.count / 3,
   };
 }
-
-// Imported lazily so this module stays a thin seam over three rather than a
-// re-export of it.
-function sceneClasses(): { InstancedMesh: typeof import('three').InstancedMesh } {
-  return threeRefs;
-}
-
-import { InstancedMesh } from 'three';
-const threeRefs = { InstancedMesh };

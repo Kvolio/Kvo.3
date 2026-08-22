@@ -6,6 +6,15 @@ import { buildLowerHull } from './lowerHull.js';
 
 export { buildLowerHull };
 
+/**
+ * Normals smooth across joints shallower than this and stay hard beyond it.
+ * Armour plate wants a crisp arris, so the threshold sits well below the
+ * shallowest real bend on the vehicle.
+ */
+const RENDER_SMOOTHING_DEGREES = 38;
+/** Collision geometry is faceted; smoothing it would only cost time. */
+const COLLISION_SMOOTHING_DEGREES = 60;
+
 /** Assemble the hull. */
 export function buildHull(ctx: BuildContext): PartResult {
   return combineParts('hull', [buildLowerHull(ctx)]);
@@ -38,9 +47,9 @@ export function buildAssembly(
   const part = builder(context);
 
   context.render.weldVertices();
-  context.render.recomputeNormals(38);
+  context.render.recomputeNormals(RENDER_SMOOTHING_DEGREES);
   context.collision.weldVertices();
-  context.collision.recomputeNormals(60, false);
+  context.collision.recomputeNormals(COLLISION_SMOOTHING_DEGREES, false);
 
   return { part, context };
 }

@@ -129,6 +129,20 @@ export const HULL = {
     height: mm(1120),
   },
 
+  /**
+   * Edge breaks on the plates.
+   *
+   * Flame-cut armour has its arris knocked off before welding, so a perfectly
+   * sharp edge reads as computer graphics — and the paint-chipping shader needs
+   * a bevel to catch light on. Not a figure anyone recorded; sized from what a
+   * cutting torch and a grinder leave behind.
+   */
+  chamfer: {
+    structural: mm(6),
+    belly: mm(4),
+    side: mm(5),
+  },
+
   /** Tow shackles at each corner. */
   towPoint: {
     centreX: mm(760),
@@ -177,6 +191,8 @@ export function hullProfile(): readonly (readonly [MM, MM])[] {
   ] as const;
 }
 
+const CHAMFER_NOTE =
+  'Not documented. Sized from what flame cutting and grinding leave on plate of this thickness.';
 const DRAWING =
   'Scaled from REF-drawing against the sourced 6316 mm hull length, 1780 mm roof height and ' +
   '470 mm ground clearance, and constrained to clear the 2100 mm turret ring.';
@@ -247,6 +263,11 @@ export const HULL_META: MetaOf<typeof HULL> = {
     thickness: { tol: 2, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     outerX: { tol: 15, source: 'derived from OVERALL.widthOverCombatTracks', confidence: 'derived' },
     height: { tol: 50, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
+  },
+  chamfer: {
+    structural: { tol: 3, source: 'fabrication practice', confidence: 'estimated', note: CHAMFER_NOTE },
+    belly: { tol: 3, source: 'fabrication practice', confidence: 'estimated', note: CHAMFER_NOTE },
+    side: { tol: 3, source: 'fabrication practice', confidence: 'estimated', note: CHAMFER_NOTE },
   },
   towPoint: {
     centreX: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },

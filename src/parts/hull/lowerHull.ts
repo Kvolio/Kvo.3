@@ -1,7 +1,7 @@
 import { Vector3 } from 'three';
 import { Region, WEAR } from '../../geom/attributes.js';
 import { rect, v2, type Poly2 } from '../../geom/poly2.js';
-import { S, mm, deg, type MM } from '../../spec/units.js';
+import { R, S, mm, deg, type MM } from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
 import { HULL, LOWER_HALF_WIDTH } from '../../spec/hull.js';
 import { structuralPlate, weldJoint } from '../emit.js';
@@ -61,7 +61,7 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
     outline: translateOutline(rect(bellyWidth, bellyLength), 0, -bellyCentreZ),
     thickness: ARMOUR.hull.floor.thickness,
     frame: facingDown(mm(floorY + ARMOUR.hull.sideWallProudOfBelly)),
-    chamfer: mm(4),
+    chamfer: HULL.chamfer.belly,
     region: Region.Exterior,
     materials: { inner: 'oiledFloorSteel' },
     // The crew's boots are on the other side of this plate all day.
@@ -87,7 +87,7 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
       outline: sideProfile,
       thickness: sideThickness,
       frame: facingOutboard(side, LOWER_HALF_WIDTH),
-      chamfer: mm(5),
+      chamfer: HULL.chamfer.side,
       region: Region.Exterior,
       materials: { inner: 'interiorIvoryPaint' },
     });
@@ -104,7 +104,7 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
       mm((floorY + noseTopY) / 2),
       ARMOUR.hull.nose.angle,
     ),
-    chamfer: mm(6),
+    chamfer: HULL.chamfer.structural,
     region: Region.Exterior,
     materials: { inner: 'interiorIvoryPaint' },
     namedEdges: [{ name: 'top', from: 2, to: 3 }],
@@ -118,7 +118,7 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
       mm((floorY + roofY) / 2),
       ARMOUR.hull.rear.angle,
     ),
-    chamfer: mm(6),
+    chamfer: HULL.chamfer.structural,
     region: Region.Exterior,
     materials: { inner: 'interiorIvoryPaint' },
     namedEdges: [{ name: 'top', from: 2, to: 3 }],
@@ -211,13 +211,13 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
 
 /** Outward normal of the nose plate: forward and down. */
 function noseNormal(): Vector3 {
-  const t = (ARMOUR.hull.nose.angle * Math.PI) / 180;
+  const t = R(ARMOUR.hull.nose.angle);
   return new Vector3(0, -Math.sin(t), Math.cos(t));
 }
 
 /** Outward normal of the rear plate: aft and down. */
 function rearNormal(): Vector3 {
-  const t = (ARMOUR.hull.rear.angle * Math.PI) / 180;
+  const t = R(ARMOUR.hull.rear.angle);
   return new Vector3(0, -Math.sin(t), -Math.cos(t));
 }
 
