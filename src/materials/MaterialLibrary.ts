@@ -60,6 +60,16 @@ export class MaterialLibrary {
     return this.cache.size;
   }
 
+  /** How many materials have actually reached onBeforeCompile. Diagnostic. */
+  get compiledCount(): number {
+    return this.uniformBlocks.length;
+  }
+
+  /** Current value of one uniform on the first compiled material. Diagnostic. */
+  peekUniform(name: string): unknown {
+    return this.uniformBlocks[0]?.[name]?.value;
+  }
+
   /** Resolve an id, building and caching the material on first use. */
   get(id: string): Material {
     const cached = this.cache.get(id);

@@ -95,3 +95,66 @@ export const WEAR = {
   /** Surfaces in constant contact — levers, handwheels, pedals, seat cushions. */
   constant: 1.0,
 } as const;
+
+/**
+ * Give a geometry the custom attributes the material system expects.
+ *
+ * Geometry built through `MeshBuilder` always carries these. Anything built
+ * another way — three's parametric geometries, an imported mesh, a debug
+ * placeholder — does not, and a missing attribute reads as 0 in WebGL rather
+ * than as an error. For `aEdgeDist` that means "on an edge", so the shader
+ * treats the entire surface as fully chipped and renders it as bare metal at
+ * near-full metalness: a dark, faintly checkered mess that looks like a
+ * lighting bug rather than a missing attribute.
+ *
+ * Rather than leave that as a trap, this fills them in explicitly.
+ */
+export function ensureProcAttributes(
+  geometry: {
+    getAttribute(name: string): unknown;
+    setAttribute(name: string, attribute: unknown): unknown;
+    attributes: Record<string, { count: number }>;
+  },
+  values: Partial<VertexState> = {},
+  makeAttribute: (data: Float32Array, itemSize: number) => unknown = defaultAttributeFactory,
+): void {
+  const position = geometry.attributes['position'];
+  if (!position) throw new Error('ensureProcAttributes: geometry has no position attribute');
+  const count = position.count;
+
+  const fill = (name: string, value: number): void => {
+    if (geometry.getAttribute(name)) return;
+    geometry.setAttribute(name, makeAttribute(new Float32Array(count).fill(value), 1));
+  };
+
+  // A large default edge distance means "middle of a plate", which is the safe
+  // reading: no chipping, rather than all of it.
+  fill(ATTR.edgeDist, values.edgeDist ?? DEFAULT_VERTEX_STATE.edgeDist);
+  fill(ATTR.cavity, values.cavity ?? DEFAULT_VERTEX_STATE.cavity);
+  fill(ATTR.wear, values.wear ?? DEFAULT_VERTEX_STATE.wear);
+  fill(ATTR.region, values.region ?? DEFAULT_VERTEX_STATE.region);
+}
+
+/** Names of every attribute a Tiger material reads. */
+export const REQUIRED_ATTRIBUTES: readonly string[] = Object.values(ATTR);
+
+/** Which required attributes a geometry is missing. Used by the debug audit. */
+export function missingProcAttributes(geometry: {
+  getAttribute(name: string): unknown;
+}): string[] {
+  return REQUIRED_ATTRIBUTES.filter((name) => !geometry.getAttribute(name));
+}
+
+let defaultAttributeFactory: (data: Float32Array, itemSize: number) => unknown = () => {
+  throw new Error('ensureProcAttributes: no attribute factory registered');
+};
+
+/**
+ * Registered once at startup with three's BufferAttribute, so this module stays
+ * free of a three import and remains testable on plain objects.
+ */
+export function registerAttributeFactory(
+  factory: (data: Float32Array, itemSize: number) => unknown,
+): void {
+  defaultAttributeFactory = factory;
+}

@@ -33,7 +33,13 @@ export default defineConfig({
     },
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } } },
+    {
+      name: 'desktop',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
+      // The touch-control specs assert on an interface that is deliberately
+      // absent without a touchscreen, so they belong to the mobile project.
+      testIgnore: /mobile\.spec\.ts/,
+    },
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
   webServer: {

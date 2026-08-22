@@ -59,7 +59,15 @@ export class TouchInputProvider implements InputProvider {
   private contributed = false;
 
   private readonly buttonsDown = new Map<ButtonKey, boolean>();
-  private readonly boundElements = new Map<HTMLElement, ButtonKey>();
+  /**
+   * Crouch and run are held modifiers on a keyboard, but holding one on a phone
+   * costs a thumb the player does not have spare. On touch they toggle instead,
+   * which is a genuine per-platform interface decision rather than a divergence
+   * in behaviour: both still resolve to the same `InputState.crouch` flag, and
+   * nothing downstream can tell the difference.
+   */
+  private readonly toggles = new Map<Action, boolean>();
+  private readonly boundElements = new Map<HTMLElement, ButtonKey | Action>();
 
   constructor(opts: TouchInputOptions = {}) {
     this.sensitivity = opts.lookSensitivity ?? 0.0028;
@@ -112,8 +120,11 @@ export class TouchInputProvider implements InputProvider {
    */
   bindButton(element: HTMLElement, action: Action): void {
     const key = ACTION_BUTTON[action];
-    if (!key) throw new Error(`touch: ${Action[action]} has no button to bind`);
-    this.boundElements.set(element, key);
+    const binding = key ?? (TOGGLEABLE.has(action) ? action : undefined);
+    if (binding === undefined) {
+      throw new Error(`touch: ${Action[action]} is neither a button nor a toggle`);
+    }
+    this.boundElements.set(element, binding);
     element.addEventListener('pointerdown', this.onButtonDown);
     element.addEventListener('pointerup', this.onButtonUp);
     element.addEventListener('pointercancel', this.onButtonUp);
@@ -129,20 +140,34 @@ export class TouchInputProvider implements InputProvider {
   }
 
   private readonly onButtonDown = (e: PointerEvent): void => {
-    const key = this.boundElements.get(e.currentTarget as HTMLElement);
-    if (!key) return;
+    const binding = this.boundElements.get(e.currentTarget as HTMLElement);
+    if (binding === undefined) return;
     e.preventDefault();
     e.stopPropagation();
-    this.buttonsDown.set(key, true);
+    if (typeof binding === 'number') {
+      this.toggles.set(binding, !this.toggles.get(binding));
+    } else {
+      this.buttonsDown.set(binding, true);
+    }
     this.contributed = true;
   };
 
   private readonly onButtonUp = (e: PointerEvent): void => {
-    const key = this.boundElements.get(e.currentTarget as HTMLElement);
-    if (!key) return;
+    const binding = this.boundElements.get(e.currentTarget as HTMLElement);
+    if (binding === undefined || typeof binding === 'number') return;
     e.preventDefault();
-    this.buttonsDown.set(key, false);
+    this.buttonsDown.set(binding, false);
   };
+
+  /** Toggle state, so the UI can light the button up while it is engaged. */
+  isToggled(action: Action): boolean {
+    return this.toggles.get(action) ?? false;
+  }
+
+  /** Clear a toggle from outside, e.g. when standing up is refused by headroom. */
+  setToggled(action: Action, value: boolean): void {
+    this.toggles.set(action, value);
+  }
 
   private readonly onPointerDown = (e: PointerEvent): void => {
     if (e.pointerType === 'mouse') return;
@@ -232,6 +257,12 @@ export class TouchInputProvider implements InputProvider {
       }
     }
 
+    if (this.toggles.get(Action.Crouch)) {
+      out.crouch = true;
+      contributedThisFrame = true;
+    }
+    if (this.toggles.get(Action.Run)) out.run = true;
+
     if (this.tapPointer) {
       out.pointer.x = this.tapPointer.x;
       out.pointer.y = this.tapPointer.y;
@@ -242,3 +273,6 @@ export class TouchInputProvider implements InputProvider {
     if (contributedThisFrame) out.lastDevice = 'touch';
   }
 }
+
+/** Actions that behave as a toggle on touch rather than as a held modifier. */
+const TOGGLEABLE = new Set<Action>([Action.Crouch, Action.Run]);

@@ -78,4 +78,22 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
+
+  // Build and capture scripts run under Node, not in the browser.
+  {
+    files: ['scripts/**/*.mjs', 'scripts/**/*.ts'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+        // Referenced inside page.evaluate callbacks, which run in the browser.
+        window: 'readonly',
+        document: 'readonly',
+      },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
 );
