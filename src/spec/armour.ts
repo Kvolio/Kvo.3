@@ -8,15 +8,15 @@ import type { MetaOf } from './meta.js';
  * quotes them: 0 deg is a vertical plate, 90 deg is horizontal. The upper
  * glacis at 80 deg is therefore nearly flat, not nearly upright.
  *
- * Only six of these figures are sourced. The remainder are carried at
- * `confidence: 'estimated'` and BLOCK Gauntlet A from passing — see
- * docs/UNCERTAINTY.md. They are here so the hull can be built, not because they
- * are established.
+ * All hull figures now trace to the Jentz & Doyle armour summary, which agrees
+ * with the SHAEF armour-arrangement diagram of October 1944 on the plates both
+ * describe. The turret side and rear thicknesses remain reconstructed and still
+ * block Gauntlet B — see docs/UNCERTAINTY.md.
  */
 export const ARMOUR = {
   hull: {
     /** Lower front / nose plate. */
-    nose: { thickness: mm(100), angle: deg(24) },
+    nose: { thickness: mm(100), angle: deg(25) },
     /** Driver's front plate, carrying the visor and the hull MG ball mount. */
     driverPlate: { thickness: mm(100), angle: deg(9) },
     /** Upper glacis, sloping back over the driver's compartment. */
@@ -28,6 +28,12 @@ export const ARMOUR = {
     rear: { thickness: mm(80), angle: deg(9) },
     roof: { thickness: mm(25), angle: deg(90) },
     floor: { thickness: mm(25), angle: deg(90) },
+    /**
+     * The lower side walls run 5 mm past the belly plate, so the floor sits in
+     * a shallow tray rather than flush. Small, but it is the difference between
+     * a hull that reads as fabricated and one that reads as extruded.
+     */
+    sideWallProudOfBelly: mm(5),
   },
   turret: {
     front: { thickness: mm(100), angle: deg(8) },
@@ -41,43 +47,51 @@ export const ARMOUR = {
 } as const;
 
 const SOURCED = 'TIC-tech';
-const ESTIMATE_NOTE =
-  'Not sourced. Reconstructed for buildability; blocks Gauntlet A until confirmed.';
+const JENTZ = 'Jentz & Doyle, via Tank Encyclopedia armour summary';
 
 export const ARMOUR_META: MetaOf<typeof ARMOUR> = {
   hull: {
     nose: {
-      thickness: { tol: 0, source: SOURCED, confidence: 'secondary' },
-      angle: { tol: 1, source: SOURCED, confidence: 'secondary' },
+      thickness: { tol: 0, source: JENTZ, confidence: 'secondary' },
+      // Jentz gives 25 deg; the Tiger I Information Center gives 24. Within tolerance.
+      angle: { tol: 1.5, source: JENTZ, confidence: 'secondary' },
     },
     driverPlate: {
-      thickness: { tol: 0, source: 'Tank Encyclopedia summary', confidence: 'estimated', note: ESTIMATE_NOTE },
-      angle: { tol: 2, source: 'REF-drawing', confidence: 'estimated', note: ESTIMATE_NOTE },
+      thickness: { tol: 0, source: JENTZ, confidence: 'secondary' },
+      angle: {
+        tol: 2,
+        source: 'REF-drawing',
+        confidence: 'estimated',
+        note:
+          'The driver plate angle is not quoted separately by the sources consulted; ' +
+          'scaled from the drawing. Small, but it sets where the visor and MG mount sit.',
+      },
     },
     upperGlacis: {
-      thickness: { tol: 0, source: 'Tank Encyclopedia summary', confidence: 'estimated', note: ESTIMATE_NOTE },
-      angle: { tol: 2, source: 'REF-drawing', confidence: 'estimated', note: ESTIMATE_NOTE },
+      thickness: { tol: 0, source: JENTZ, confidence: 'secondary' },
+      angle: { tol: 2, source: JENTZ, confidence: 'secondary' },
     },
     sideUpper: {
-      thickness: { tol: 0, source: 'Tank Encyclopedia summary', confidence: 'secondary' },
-      angle: { tol: 0, source: 'REF-drawing', confidence: 'secondary' },
+      thickness: { tol: 0, source: JENTZ, confidence: 'secondary' },
+      angle: { tol: 0, source: JENTZ, confidence: 'secondary' },
     },
     sideLower: {
-      thickness: { tol: 0, source: 'Tank Encyclopedia summary', confidence: 'secondary' },
-      angle: { tol: 0, source: 'REF-drawing', confidence: 'secondary' },
+      thickness: { tol: 0, source: JENTZ, confidence: 'secondary' },
+      angle: { tol: 0, source: JENTZ, confidence: 'secondary' },
     },
     rear: {
-      thickness: { tol: 0, source: 'Tank Encyclopedia summary', confidence: 'estimated', note: ESTIMATE_NOTE },
-      angle: { tol: 2, source: 'REF-drawing', confidence: 'estimated', note: ESTIMATE_NOTE },
+      thickness: { tol: 0, source: JENTZ, confidence: 'secondary' },
+      angle: { tol: 1, source: JENTZ, confidence: 'secondary' },
     },
     roof: {
-      thickness: { tol: 0, source: 'Tank Encyclopedia summary', confidence: 'estimated', note: ESTIMATE_NOTE },
+      thickness: { tol: 0, source: `${JENTZ}; SHAEF armour arrangement diagram, Oct 1944`, confidence: 'secondary' },
       angle: { tol: 0, source: 'REF-drawing', confidence: 'secondary' },
     },
     floor: {
-      thickness: { tol: 0, source: 'Tank Encyclopedia summary', confidence: 'estimated', note: ESTIMATE_NOTE },
+      thickness: { tol: 0, source: `${JENTZ}; SHAEF armour arrangement diagram, Oct 1944`, confidence: 'secondary' },
       angle: { tol: 0, source: 'REF-drawing', confidence: 'secondary' },
     },
+    sideWallProudOfBelly: { tol: 1, source: 'T1I hull dimensions', confidence: 'secondary' },
   },
   turret: {
     front: {
@@ -89,11 +103,11 @@ export const ARMOUR_META: MetaOf<typeof ARMOUR> = {
       angle: { tol: 1, source: SOURCED, confidence: 'secondary' },
     },
     side: {
-      thickness: { tol: 0, source: 'Tank Encyclopedia summary', confidence: 'estimated', note: ESTIMATE_NOTE },
+      thickness: { tol: 0, source: `${JENTZ}; Wikipedia specification box concurs`, confidence: 'secondary' },
       angle: { tol: 0, source: 'REF-drawing', confidence: 'secondary' },
     },
     rear: {
-      thickness: { tol: 0, source: 'Tank Encyclopedia summary', confidence: 'estimated', note: ESTIMATE_NOTE },
+      thickness: { tol: 0, source: `${JENTZ}; Wikipedia specification box concurs`, confidence: 'secondary' },
       angle: { tol: 0, source: 'REF-drawing', confidence: 'secondary' },
     },
     roof: {

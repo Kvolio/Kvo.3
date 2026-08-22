@@ -8,6 +8,9 @@ must list the estimated values its subsystem depends on.
 **An entry blocks its subsystem's Gauntlet from passing until it is either researched to a
 conclusion or explicitly accepted as reconstructed, with that acceptance recorded here.**
 
+`tests/spec/meta.test.ts` prints the current count of reconstructed values on every run.
+It stood at 91 when Stage 0 closed and at **82** after the Stage 1 research pass.
+
 | Status | Meaning |
 |---|---|
 | `OPEN` | Unresolved. Blocks the listed subsystem. |
@@ -62,16 +65,23 @@ The Tiger I Information Center gives 120 mm at 0°. Other secondary sources quot
 which is plausible if they are describing the varying section of a curved cast mantlet rather than a
 single figure. Needs a source that states *where* it is measured.
 
-## #5 — Width over combat tracks · `OPEN` · Hull, Running gear
+## #5 — Width over combat tracks · `ADOPTED` · Hull, Running gear
 
-Three figures in circulation: **3,720 mm** (TIC), **3,705 mm**, and **3,547 mm**. Currently carrying
-3,720 mm. The spread is 173 mm, which is well outside any sensible tolerance and is visible in the
-frontal silhouette.
+Four figures in circulation: **3,720 mm** (TIC), **3,705 mm** (Jentz-derived summaries),
+**3,560 mm** (Wikipedia), **3,547 mm**.
 
-`REF-photo-2` (frontal) is the best available cross-check: the track-to-hull width ratio can be
-measured off it once the hull width is fixed independently.
+**Partly resolved.** The two clusters measure different things. 3,705/3,720 mm is the width over the
+725 mm combat tracks *including* the outer track guards; 3,547/3,560 mm is almost certainly the
+width without them. The transport figure supports this: swapping 725 mm tracks for 520 mm ones
+should narrow the vehicle by 2 x 205 = 410 mm, but the quoted transport width is 563 mm narrower —
+because rail loading also removed the outer road wheel of every axle and the outer track guards.
 
-**Blocks:** Stage 1 (Hull) Gauntlet.
+**Adopted: 3,720 mm over combat tracks**, tolerance 15 mm, which spans the 3,705 figure. The
+remaining question is only which of the two nearly-identical figures is the drawing value; it does
+not affect the model at this tolerance.
+
+`REF-photo-2` (frontal) remains the cross-check once the hull is built: the track-to-hull width
+ratio can be measured off it directly.
 
 ## #6 — Track width · `RESOLVED`
 
@@ -137,3 +147,7 @@ Gauntlet report must list them. They are not to be presented as historically att
 | Stage 0 | #6 | Resolved from the `Kgs 63/725/130` designation |
 | Stage 0 | #1 | Adopted 24/side on two concurring sources; TIC technical page treated as erroneous |
 | Stage 0 | #12 | Accepted as reconstruction; flagging mechanism defined |
+| Stage 1 | #5 | Adopted 3,720 mm; the 3,547/3,560 cluster identified as excluding the outer track guards |
+| Stage 1 | — | Hull armour promoted from reconstructed to sourced against Jentz & Doyle: nose 100 mm @ 25 deg, driver plate 100 mm, upper glacis 60 mm @ 80 deg, superstructure side 80 mm, lower side 60 mm, rear 80 mm @ 9 deg, roof and floor 25 mm. Corroborated by the SHAEF armour-arrangement diagram of October 1944 |
+| Stage 1 | — | Turret side and rear promoted to sourced at 80 mm on two concurring sources |
+| Stage 1 | — | Lower side walls established as standing 5 mm proud of the belly plate |

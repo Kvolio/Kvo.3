@@ -178,7 +178,12 @@ describe('running gear', () => {
 describe('armour', () => {
   it('matches the sourced plate thicknesses', () => {
     expect(SPEC.armour.hull.nose.thickness).toBe(100);
-    expect(SPEC.armour.hull.nose.angle).toBe(24);
+    expect(SPEC.armour.hull.nose.angle).toBe(25);
+    expect(SPEC.armour.hull.driverPlate.thickness).toBe(100);
+    expect(SPEC.armour.hull.upperGlacis.thickness).toBe(60);
+    expect(SPEC.armour.hull.upperGlacis.angle).toBe(80);
+    expect(SPEC.armour.hull.rear.thickness).toBe(80);
+    expect(SPEC.armour.hull.rear.angle).toBe(9);
     expect(SPEC.armour.hull.sideUpper.thickness).toBe(80);
     expect(SPEC.armour.hull.sideLower.thickness).toBe(60);
     expect(SPEC.armour.turret.front.thickness).toBe(100);
@@ -189,11 +194,14 @@ describe('armour', () => {
 
   it('keeps every plate angle within a physically meaningful range', () => {
     // Angles are from vertical: 0 upright, 90 horizontal.
-    const walk = (node: Record<string, { thickness: number; angle: number }>): void => {
+    const walk = (node: Record<string, unknown>): void => {
       for (const [name, plate] of Object.entries(node)) {
-        expect(plate.thickness, `${name} thickness`).toBeGreaterThan(0);
-        expect(plate.angle, `${name} angle`).toBeGreaterThanOrEqual(0);
-        expect(plate.angle, `${name} angle`).toBeLessThanOrEqual(90);
+        // Skip scalars such as the side-wall projection past the belly plate.
+        if (typeof plate !== 'object' || plate === null) continue;
+        const { thickness, angle } = plate as { thickness: number; angle: number };
+        expect(thickness, `${name} thickness`).toBeGreaterThan(0);
+        expect(angle, `${name} angle`).toBeGreaterThanOrEqual(0);
+        expect(angle, `${name} angle`).toBeLessThanOrEqual(90);
       }
     };
     walk(SPEC.armour.hull);
