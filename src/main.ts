@@ -4,7 +4,6 @@ import {
   EdgesGeometry,
   LineBasicMaterial,
   LineSegments,
-  Mesh,
   Vector3,
 } from 'three';
 import { Engine } from './core/Engine.js';
@@ -23,7 +22,9 @@ import { GamepadInputProvider } from './input/GamepadInputProvider.js';
 import { HUD } from './ui/HUD.js';
 import { MobileControls } from './ui/MobileControls.js';
 import { DebugOverlay, debugEnabled } from './debug/Overlay.js';
-import { Region, ensureProcAttributes, registerAttributeFactory } from './geom/attributes.js';
+import { registerAttributeFactory } from './geom/attributes.js';
+import { buildAssembly, buildHull } from './parts/hull/index.js';
+import { mountAssembly } from './assembly/mount.js';
 import { SPEC } from './spec/index.js';
 import { AusfH_Feb1943 } from './spec/variants.js';
 import { S } from './spec/units.js';
@@ -85,11 +86,21 @@ const world = new CollisionWorld();
 world.addStatic(ground.mesh.geometry, { id: 'ground', flags: CollisionFlags.Walkable });
 
 // ---------------------------------------------------------------------------
-// Stage 0 dimensional envelope.
+// The vehicle.
 //
-// The Ausf. H's sourced overall dimensions, drawn as a wireframe at the correct
-// ride height. It is a measuring stick, not a model.
+// The lower hull is real armour now: welded plate solids with genuine thickness,
+// built from the sourced Jentz & Doyle arrangement. The wireframe around it is
+// the overall envelope, kept as a measuring stick until the superstructure,
+// turret and running gear fill it out.
 // ---------------------------------------------------------------------------
+progress('hull', 0.78);
+const hull = buildAssembly(buildHull, { variant: AusfH_Feb1943, detail: 0 });
+const mountedHull = mountAssembly(engine.scene, world, materials, hull, {
+  name: 'hull',
+  castShadow: environment.shadowsEnabled,
+  receiveShadow: environment.shadowsEnabled,
+});
+
 const envelope = new BoxGeometry(
   S(SPEC.overall.widthOverCombatTracks),
   S(SPEC.overall.heightToCupola),
@@ -99,34 +110,10 @@ envelope.translate(0, S(SPEC.overall.heightToCupola) / 2, 0);
 
 const envelopeLines = new LineSegments(
   new EdgesGeometry(envelope),
-  new LineBasicMaterial({ color: 0xc8a54e, transparent: true, opacity: 0.5 }),
+  new LineBasicMaterial({ color: 0xc8a54e, transparent: true, opacity: 0.35 }),
 );
-envelopeLines.name = 'stage0-envelope';
+envelopeLines.name = 'overall-envelope';
 engine.scene.add(envelopeLines);
-
-// The hull box itself is solid, so collision, climbing and the walk-around are
-// exercised end to end from the first build.
-const hullBlock = new BoxGeometry(
-  S(SPEC.overall.widthOverCombatTracks),
-  S(SPEC.overall.heightToHullRoof) - S(SPEC.overall.groundClearance),
-  S(SPEC.overall.length),
-);
-hullBlock.translate(
-  0,
-  S(SPEC.overall.groundClearance) +
-    (S(SPEC.overall.heightToHullRoof) - S(SPEC.overall.groundClearance)) / 2,
-  0,
-);
-ensureProcAttributes(hullBlock, { region: Region.Exterior });
-const hullMesh = new Mesh(hullBlock, materials.get('armourPaintedExterior'));
-hullMesh.name = 'stage0-hull-envelope';
-hullMesh.castShadow = environment.shadowsEnabled;
-hullMesh.receiveShadow = environment.shadowsEnabled;
-engine.scene.add(hullMesh);
-world.addStatic(hullBlock, {
-  id: 'stage0-hull-envelope',
-  flags: CollisionFlags.Walkable | CollisionFlags.MantleTarget,
-});
 
 progress('controls', 0.85);
 const input = new InputManager();
@@ -170,7 +157,9 @@ loop.start();
 boot?.classList.add('done');
 setTimeout(() => boot?.remove(), 500);
 
-hud.setPrompt(`${AusfH_Feb1943.label} — dimensional envelope, Stage 0`);
+hud.setPrompt(
+  `${AusfH_Feb1943.label} — lower hull, ${mountedHull.triangleCount.toLocaleString()} triangles`,
+);
 setTimeout(() => hud.setPrompt(null), 5000);
 
 // Exposed for the Playwright harness: deterministic poses, quality overrides
@@ -209,7 +198,12 @@ window.__TIGER__ = {
   // Live handles for the Playwright harness and for diagnosing render faults.
   // Kept deliberately small: poses, statistics and the objects a visual test
   // legitimately needs to inspect.
-  internals: { engine, materials, environment, ground, world, player, input, touch, loop },
+  internals: { engine, materials, environment, ground, world, player, input, touch, loop, hull },
+  hullStats: () => ({
+    triangles: mountedHull.triangleCount,
+    collisionTriangles: mountedHull.collisionTriangleCount,
+    fastenerMeshes: mountedHull.fasteners.length,
+  }),
   sceneReport: () => ({
     compiledMaterials: materials.compiledCount,
     paintUniform: materials.peekUniform('uPaint'),

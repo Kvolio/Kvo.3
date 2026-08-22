@@ -14,6 +14,7 @@
 
 import { OVERALL, OVERALL_META } from './overall.js';
 import { ARMOUR, ARMOUR_META } from './armour.js';
+import { HULL, HULL_META } from './hull.js';
 import {
   TRACK,
   TRACK_META,
@@ -50,6 +51,7 @@ import {
 export const SPEC = {
   overall: OVERALL,
   armour: ARMOUR,
+  hull: HULL,
   track: TRACK,
   sprocket: SPROCKET,
   idler: IDLER,
@@ -71,6 +73,7 @@ export const SPEC = {
 export const SPEC_META = {
   overall: OVERALL_META,
   armour: ARMOUR_META,
+  hull: HULL_META,
   track: TRACK_META,
   sprocket: SPROCKET_META,
   idler: IDLER_META,
@@ -95,6 +98,7 @@ export * from './units.js';
 export * from './meta.js';
 export * from './overall.js';
 export * from './armour.js';
+export * from './hull.js';
 export * from './runningGear.js';
 export * from './armament.js';
 export * from './turret.js';
