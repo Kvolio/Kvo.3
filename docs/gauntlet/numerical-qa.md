@@ -11,7 +11,8 @@ All lengths in millimetres.
 | Feature | Reference | Model | Deviation | % | Tol | Verdict | Source |
 |---|---|---|---|---|---|---|---|
 | Hull length, nose to rear plate | 6316 | 6317 | +1 | +0.0% | ±60 | ok | TIC-tech; centreline scan of the armour |
-| Foremost point (track guard tip) | 3480 | 3480 | +0 | +0.0% | ±40 | ok | REF-drawing side view: guard edge ahead of the nose |
+| Overall length, gun forward | 8450 | 8246 | -204 | -2.4% | ±260 | ok | TIC-tech; muzzle to the aftmost fitting |
+| Track guard tip, ahead of the nose | 3480 | 3468 | -12 | -0.3% | ±60 | ok | REF-drawing side view: guard edge ahead of the nose |
 | Aftmost point (Feifel canisters) | 3330 | 3475 | +145 | +4.4% | ±160 | ok | REF-drawing side view: canisters project aft of the rear plate |
 | Width over track guards | 3720 | 3720 | +0 | +0.0% | ±20 | ok | TIC-tech, UNCERTAINTY #5 |
 | Superstructure width | 3240 | 3240 | +0 | +0.0% | ±40 | ok | REF-drawing front view; measured onto the sponson side |

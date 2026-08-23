@@ -106,6 +106,10 @@ export const TURRET = {
     sightApertureSpacing: mm(140),
     /** Sight cluster offset from the bore, to the gunner's side. */
     sightOffsetX: mm(330),
+    /** Clearance between the mantlet's bore and the tube through it. */
+    boreClearance: mm(25),
+    /** Edge band on the casting, for the chipping shader. */
+    edgeBand: mm(45),
   },
 
   loaderHatch: {
@@ -244,6 +248,8 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     sightApertures: { tol: 0, source: 'TIC-changes: TZF 9b is binocular until Mar 1944', confidence: 'secondary' },
     sightApertureDiameter: { tol: 15, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
     sightApertureSpacing: { tol: 30, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    boreClearance: { tol: 10, source: 'fitting clearance', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    edgeBand: { tol: 15, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING_ESTIMATE },
     sightOffsetX: { tol: 80, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   loaderHatch: {

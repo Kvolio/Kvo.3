@@ -28,6 +28,11 @@ export const GUN = {
     length: mm(465),
     outerDiameter: mm(255),
     baffles: 2,
+    /** Wall at the muzzle, so the bore is a hole you can look down. */
+    muzzleWall: mm(18),
+    /** Where each baffle slot starts and ends along the brake. */
+    baffleStartFraction: 0.25,
+    baffleEndFraction: 0.55,
   },
 
   elevation: {
@@ -42,6 +47,14 @@ export const GUN = {
     trunnionY: mm(1980),
     /** Trunnion axis position relative to the turret ring centre. */
     trunnionZ: mm(430),
+    /**
+     * How much of the barrel's length sits BEHIND the trunnion.
+     *
+     * The trunnion is not at the breech: the gun is balanced about it, so a
+     * fifth of the tube is behind and the recoil gear and breech block are
+     * behind that again.
+     */
+    tubeBehindTrunnion: 0.18,
   },
 
   recoil: {
@@ -107,12 +120,16 @@ export const GUN_META: MetaOf<typeof GUN> = {
   muzzleBrake: {
     length: { tol: 30, source: 'REF-photo-1, REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
     outerDiameter: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    muzzleWall: { tol: 6, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    baffleStartFraction: { tol: 0.08, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    baffleEndFraction: { tol: 0.08, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
     baffles: { tol: 0, source: 'REF-photo-1', confidence: 'secondary' },
   },
   elevation: {
     min: { tol: 1.5, source: 'TIC-tech', confidence: 'secondary', uncertainty: 3 },
     max: { tol: 2, source: 'TIC-tech', confidence: 'secondary', uncertainty: 3 },
     trunnionY: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    tubeBehindTrunnion: { tol: 0.05, source: 'REF-cutaway: gun balanced about the trunnion', confidence: 'estimated', note: DRAWING_ESTIMATE },
     trunnionZ: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   recoil: {

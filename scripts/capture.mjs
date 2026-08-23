@@ -46,8 +46,11 @@ const server = createServer(async (req, res) => {
  * from any practical distance foreshortens the far end, which is precisely the
  * direction in which proportions become unarguable.
  */
-const FRUSTUM_MM = 4400;
-const PLAN_FRUSTUM_MM = 8200;
+// Tall enough that the elevations show the whole vehicle. The side and plan
+// views have to hold 8,450 mm of tank gun-forward, and the viewport is 16:9, so
+// the limiting dimension is height: 8450/(16/9) = 4,753 mm plus margin.
+const FRUSTUM_MM = 5400;
+const PLAN_FRUSTUM_MM = 9600;
 
 const ORTHO_VIEWS = [
   { id: 'ortho-front', eye: [0, 1500, 20000], target: [0, 1500, 0], height: FRUSTUM_MM },

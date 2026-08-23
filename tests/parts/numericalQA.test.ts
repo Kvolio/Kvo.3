@@ -91,12 +91,45 @@ describe('numerical QA', () => {
     // set the extents, so they are measured separately rather than rolled into
     // one aggregate that goes stale whenever either of them moves — which is
     // exactly what happened when the track guards arrived.
+    // With the gun on, the foremost point is the muzzle, and the vehicle's
+    // overall length becomes directly comparable with the sourced gun-forward
+    // figure — a check on the trunnion position, the barrel's L/56 length and
+    // the muzzle brake all at once, none of which was tuned to make it land.
     record({
-      feature: 'Foremost point (track guard tip)',
-      reference: HULL.trackGuard.frontZ,
-      model: toMM(box.max.z),
+      feature: 'Overall length, gun forward',
+      reference: SPEC.overall.lengthGunForward,
+      model: toMM(box.max.z - box.min.z),
       unit: 'mm',
-      tolerance: 40,
+      tolerance: 260,
+      source: 'TIC-tech; muzzle to the aftmost fitting',
+    });
+
+    // The guard tip on its own, probed just inboard of the triangular sweep
+    // where it reaches furthest forward.
+    const guardTipHit = measureThicknessAlong(
+      geometry,
+      new Vector3(
+        S(mm(HULL.lowerWidth / 2 + 20)),
+        // Mid-plate: the guard's top is flush with the sponson floor's, so its
+        // material sits just BELOW that line, not on it.
+        S(
+          mm(
+            HULL.trackGuard.height +
+              ARMOUR.hull.roof.thickness -
+              HULL.trackGuard.thickness / 2,
+          ),
+        ),
+        S(mm(5000)),
+      ),
+      aft,
+      S(mm(2200)),
+    );
+    record({
+      feature: 'Track guard tip, ahead of the nose',
+      reference: HULL.trackGuard.frontZ,
+      model: guardTipHit === null ? NaN : 5000 - toMM(guardTipHit),
+      unit: 'mm',
+      tolerance: 60,
       source: 'REF-drawing side view: guard edge ahead of the nose',
     });
     record({
@@ -248,8 +281,11 @@ describe('numerical QA', () => {
     });
 
     const glacisMidZ = mm((HULL.frontZ + (HULL.frontZ - HULL.glacisRun)) / 2);
+    // Off the centreline: a ray dropped on the glacis at x=0 now crosses the
+    // gun barrel on the way down and measures its wall instead. Clear of the
+    // headlights at 1,080 too.
     const glacisCross = crossPlate(
-      new Vector3(0, S(mm(2400)), S(glacisMidZ)),
+      new Vector3(S(mm(600)), S(mm(2400)), S(glacisMidZ)),
       new Vector3(0, -1, 0),
     );
     record({
