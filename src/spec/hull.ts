@@ -49,13 +49,13 @@ export const HULL = {
    * Height at which the nose plate gives way to the short glacis. The top edge
    * of the nose plate is the hull's foremost point.
    */
-  noseTopY: mm(980),
+  noseTopY: mm(1150),
   /**
    * Horizontal run of the short glacis, from the top of the nose plate back to
    * the foot of the driver's front plate. Short, as its name says: this is the
    * step in the Tiger's front, not a deck.
    */
-  glacisRun: mm(400),
+  glacisRun: mm(550),
 
   /** Longitudinal extent of the sponson floor, which is also the roof of the track run. */
   sponsonFloorY: mm(1120),
@@ -263,6 +263,11 @@ export function hullProfile(): readonly (readonly [MM, MM])[] {
   ] as const;
 }
 
+const MEASURED =
+  'Measured off the 1:50 side elevation, calibrated at 20.3 mm/px on the sourced hull length ' +
+  'and cross-checked against the roof height (1827 mm measured vs 1780 mm sourced, 2.6 per cent). ' +
+  'The drawing resolves the front step and the roof front edge but not a 60 mm plate, so the ' +
+  'plate angles come from Jentz & Doyle and only the transition heights come from here.';
 const CHAMFER_NOTE =
   'Not documented. Sized from what flame cutting and grinding leave on plate of this thickness.';
 const DRAWING =
@@ -281,8 +286,8 @@ export const HULL_META: MetaOf<typeof HULL> = {
     uncertainty: 5,
   },
   superstructureWidth: { tol: 60, source: 'REF-drawing front view', confidence: 'estimated', note: DRAWING },
-  noseTopY: { tol: 60, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
-  glacisRun: { tol: 80, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING },
+  noseTopY: { tol: 90, source: 'REF-drawing side view, measured', confidence: 'estimated', note: MEASURED },
+  glacisRun: { tol: 120, source: 'REF-drawing side view, measured', confidence: 'estimated', note: MEASURED },
   sponsonFloorY: { tol: 50, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
   firewallZ: { tol: 80, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING },
   driverHatch: {

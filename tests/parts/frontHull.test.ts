@@ -125,8 +125,10 @@ describe('each frontal plate is its own thickness', () => {
     };
 
     const aft = new Vector3(0, 0, -1);
-    const driver = crossAt(1250, aft, new Vector3(0, S(mm(1250)), S(mm(4200))));
-    const nose = crossAt(700, aft, new Vector3(0, S(mm(700)), S(mm(4200))));
+    // Sampled well inside each plate rather than near a transition, where a ray
+    // grazes the corner and measures a few millimetres of nothing.
+    const driver = crossAt(1500, aft, new Vector3(0, S(mm(1500)), S(mm(4200))));
+    const nose = crossAt(800, aft, new Vector3(0, S(mm(800)), S(mm(4200))));
 
     // Crossed along Z through plates tilted 9 and 25 degrees from vertical, so
     // both paths are longer than the plate is thick — the nose markedly so.

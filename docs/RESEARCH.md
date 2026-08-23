@@ -230,3 +230,37 @@ in dust.
   by fine mesh screens.
 - Dropped from production **October 1943**, though mounting points stayed welded on for roughly
   three more months.
+
+---
+
+## 10. Measurement of the 1:50 orthographic drawing
+
+`REF-drawing` was measured rather than eyeballed. The side elevation was
+extracted pixel by pixel, the hull outline traced, and the image calibrated two
+independent ways:
+
+| Calibration | Pixels | Sourced value | Scale |
+|---|---|---|---|
+| Hull length, nose to tail | 311 px | 6,316 mm | 20.3 mm/px |
+| Ground line to hull roof | 90 px | 1,780 mm | 19.8 mm/px |
+
+The two agree to 2.6 per cent, which is as much as a scan of this size can give.
+
+**What the drawing can resolve.** Gross proportions, and the position of the
+front's major transitions:
+
+- The hull roof's front edge sits **~670 mm behind the hull's foremost point**.
+- There is a clear step in the front profile at **y ≈ 1,150–1,280 mm**, with the
+  surface retreating several hundred millimetres across a short rise.
+- The front track guard projects forward of the nose as a separate thin edge,
+  which is what makes the naive "leftmost ink" reading of the outline misleading.
+
+**What it cannot resolve.** At 20 mm per pixel a 60 mm plate is three pixels and
+a 10-degree slope is within the dithering noise. Plate thicknesses and angles
+therefore continue to come from Jentz & Doyle; only the transition HEIGHTS come
+from the drawing.
+
+**Corrections this forced.** The nose-to-glacis transition moved from 980 mm to
+1,150 mm, and the glacis run from 400 mm to 550 mm. Together those put the roof's
+front edge 634 mm behind the nose top, against the 670 mm measured — inside the
+drawing's own resolution.
