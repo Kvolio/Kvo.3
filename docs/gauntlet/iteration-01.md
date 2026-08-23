@@ -164,19 +164,33 @@ quote 100–200 mm without stating where it is measured).
 
 ## Critic 4 — Running gear · REJECT
 
-**Nothing to assess.** No road wheels, no torsion bars, no swing arms, no
-sprockets, no idlers, no track links.
+**Now has something to assess.** 48 road wheels in three interleaved rows, eight
+swing arms and torsion bars a side, drive sprockets, idlers, and 192 individual
+track links.
 
-The specification is in place and cross-checks arithmetically: a 20-tooth
-sprocket at 130 mm pitch gives a derived pitch radius of 415.55 mm against an
-independently sourced outer radius of 457.2 mm, and the 41.65 mm difference is a
-plausible tooth-tip and guide-horn allowance.
+**Findings.**
 
-`UNCERTAINTY #9` remains open: which of the three interleave rows each station's
-wheels occupy is held as data rather than code, so a correction is a spec edit,
-but it is not yet sourced from a drawing.
+| # | Finding | Severity |
+|---|---|---|
+| 4.1 | Both pulleys sat too high — the sprocket by 200 mm, the idler by 245 mm — which lifted the upper track run nearly 400 mm clear of the road wheels. Measured off the side elevation, where both are drawn as clear spoked wheels against road wheel axles of known height. | Major, corrected |
+| 4.2 | The swing arm was taken as horizontal at rest, burying the bottom of every wheel 200 mm underground. The droop is now derived from the bar height, arm length and wheel diameter. | Critical, corrected |
+| 4.3 | The wheels were resting on the ground rather than on the track, so once links were laid on the belt path the whole track hung through the ground plane. The axle now sits one wheel radius plus one link thickness up. | Major, corrected |
+| 4.4 | No shock absorbers on stations 1 and 8, no sprocket spokes, no idler spokes, no track tension solve — the idler is fixed where the spec puts it rather than positioned by the draw bolts. | Major |
+| 4.5 | `UNCERTAINTY #9` remains open: the wheel rows span 465 mm of a 725 mm track, and the drawing's front elevation cannot settle the true spread because the track hides the wheels in that view. | Major |
+| 4.6 | The track is 69,408 triangles of a 70k model. The guide horns drop at detail 2; nothing else is tiered yet. | Minor |
 
-**REJECT.**
+**A real cross-check.** The track's length is fixed at 96 links of 130 mm pitch,
+so the belt path around the pulleys has to agree with it — and after the pulley
+heights were corrected it does, to 30 mm in 12,480. That is well inside the
+idler's 120 mm of tensioning travel, and it is an independent check on the
+sprocket and idler positions, which are separately estimated.
+
+**REJECT** on 4.4 and 4.5.
+
+The specification also cross-checks arithmetically: a 20-tooth sprocket at
+130 mm pitch gives a derived pitch radius of 415.55 mm against an independently
+sourced outer radius of 457.2 mm, and the 41.65 mm difference is a plausible
+tooth-tip and guide-horn allowance.
 
 ## Critic 5 — Visual quality · REJECT
 

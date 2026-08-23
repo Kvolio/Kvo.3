@@ -7,6 +7,7 @@ import { buildSuperstructure } from './superstructure.js';
 import { buildRearFittings } from './rearFittings.js';
 import { buildFittings } from './fittings.js';
 import { buildRunningGear } from '../running/suspension.js';
+import { buildTracks } from '../running/track.js';
 
 export { buildLowerHull, buildSuperstructure, buildRearFittings };
 
@@ -27,6 +28,7 @@ export function buildHull(ctx: BuildContext): PartResult {
     buildRearFittings(ctx),
     buildFittings(ctx),
     buildRunningGear(ctx),
+    buildTracks(ctx),
   ]);
 }
 

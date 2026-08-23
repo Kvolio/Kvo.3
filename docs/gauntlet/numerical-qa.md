@@ -18,7 +18,7 @@ All lengths in millimetres.
 | Hull roof height | 1780 | 1780 | -0 | -0.0% | ±25 | ok | TIC-tech; measured by ray onto the roof plate |
 | Tallest fitting above roof | 2030 | 2005 | -25 | -1.2% | ±120 | ok | REF-photo rear deck: Feifel trunking is a low hump |
 | Ground clearance under the belly | 470 | 475 | +5 | +1.1% | ±12 | ok | TIC-tech; measured under the centreline |
-| Lowest point of the vehicle | 0 | 0 | +0 | — | ±6 | ok | road wheels resting on the ground plane |
+| Lowest point of the vehicle | 0 | -1 | -1 | — | ±6 | ok | road wheels resting on the ground plane |
 | Nose plate thickness | 100 | 100 | -0 | -0.0% | ±12 | ok | Jentz & Doyle |
 | Driver's plate thickness | 100 | 100 | -0 | -0.0% | ±12 | ok | Jentz & Doyle |
 | Short glacis thickness | 60 | 60 | -0 | -0.0% | ±12 | ok | Jentz & Doyle |

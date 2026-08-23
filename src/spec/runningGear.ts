@@ -29,6 +29,19 @@ export const TRACK = {
   totalLength: mm(96 * 130),
   /** Transport track, Kgs 63/520/130. Fitted for rail movement only. */
   transportWidth: mm(520),
+
+  /** Thickness of a link's ground-contact pad. */
+  linkThickness: mm(26),
+  /**
+   * Gap left between consecutive links.
+   *
+   * Real links articulate on their pins with clearance; laid nose to tail at
+   * the full pitch they fight for the same millimetre wherever the track
+   * curves, and the sprocket wrap turns into a ring of interpenetrating steel.
+   */
+  linkGap: mm(14),
+  /** Edge band width on a link, for the chipping shader. Links are small. */
+  linkEdgeBand: mm(10),
 } as const;
 
 // -----------------------------------------------------------------------------
@@ -52,7 +65,16 @@ export const SPROCKET = {
   pitchRadius: mm(130 / (2 * Math.sin(Math.PI / SPROCKET_TEETH))),
   /** Longitudinal position of the sprocket axis. Front-drive. */
   centreZ: mm(2470),
-  centreY: mm(800),
+  /**
+   * Height of the sprocket axis above ground.
+   *
+   * MEASURED off the 1:50 side elevation, where the sprocket is drawn as a
+   * clear spoked wheel: its centre sits about 190 mm above the road wheel
+   * axles, not the 400 mm this carried before. Getting this wrong lifts the
+   * whole upper track run clear of the road wheels, and a Tiger's upper run
+   * passes within a track's thickness of them.
+   */
+  centreY: mm(600),
   /** Hub barrel, spanning the guide-horn channel between the two toothed rings. */
   hubDiameter: mm(300),
   /** Inset of a toothed ring from the track's outer edge. */
@@ -62,7 +84,8 @@ export const SPROCKET = {
 export const IDLER = {
   outerDiameter: mm(686),
   centreZ: mm(-2510),
-  centreY: mm(715),
+  /** Measured off the side elevation, like the sprocket's. */
+  centreY: mm(470),
   /** Track tension is set by draw bolts acting on the idler crank. */
   tensioningTravel: mm(120),
   hubDiameter: mm(260),
@@ -179,10 +202,18 @@ export const SHOCK_STATIONS: readonly number[] = [0, STATIONS_PER_SIDE - 1];
  * horizontal instead — which is the obvious thing to do and what this did at
  * first — buries the bottom of every wheel 200 mm underground.
  *
+ * The wheels rest on the TRACK, not on the ground, so the axle sits one wheel
+ * radius plus one link thickness up. Twenty-six millimetres sounds like
+ * pedantry until the links are laid on the belt path and the whole track hangs
+ * through the ground plane, which is exactly what happened.
+ *
  * Positive suspension deflection is compression, which reduces this droop.
  */
 export const STATIC_ARM_DROOP: DEG = deg(
-  (Math.asin((SUSPENSION.pivotY - ROAD_WHEEL.diameter / 2) / SUSPENSION.armLength) * 180) /
+  (Math.asin(
+    (SUSPENSION.pivotY - ROAD_WHEEL.diameter / 2 - TRACK.linkThickness) / SUSPENSION.armLength,
+  ) *
+    180) /
     Math.PI,
 );
 
@@ -205,6 +236,11 @@ export const TORSION_RATE = (() => {
 // Provenance
 // -----------------------------------------------------------------------------
 
+const MEASURED_SIDE =
+  'REF-drawing side elevation, measured: the sprocket and idler are drawn as ' +
+  'clear spoked wheels and their centres read directly against the road wheel ' +
+  'axles, which are a known 400 mm off the ground and serve as the scale.';
+
 const DRAWING_ESTIMATE =
   'Scaled from REF-drawing against the 6316 mm hull length. Not a dimensioned figure.';
 
@@ -216,6 +252,9 @@ export const TRACK_META: MetaOf<typeof TRACK> = {
   guideHornHeight: { tol: 10, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
   totalLength: { tol: 0, source: 'derived: 96 links x 130 mm pitch', confidence: 'derived' },
   transportWidth: { tol: 5, source: 'TIC-susp', confidence: 'secondary' },
+  linkThickness: { tol: 6, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  linkGap: { tol: 6, source: 'articulation clearance', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  linkEdgeBand: { tol: 5, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
 
 export const SPROCKET_META: MetaOf<typeof SPROCKET> = {
@@ -231,14 +270,14 @@ export const SPROCKET_META: MetaOf<typeof SPROCKET> = {
     note: 'Corroborated by the sourced outer radius; difference is tooth-tip plus horn allowance.',
   },
   centreZ: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
-  centreY: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  centreY: { tol: 60, source: MEASURED_SIDE, confidence: 'estimated', note: DRAWING_ESTIMATE },
   hubDiameter: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
 
 export const IDLER_META: MetaOf<typeof IDLER> = {
   outerDiameter: { tol: 5, source: 'TIC-susp (27 in)', confidence: 'secondary' },
   centreZ: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
-  centreY: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  centreY: { tol: 60, source: MEASURED_SIDE, confidence: 'estimated', note: DRAWING_ESTIMATE },
   tensioningTravel: { tol: 30, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
   hubDiameter: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
