@@ -3,7 +3,7 @@ import { Region, WEAR } from '../../geom/attributes.js';
 import { rect, v2, type Poly2 } from '../../geom/poly2.js';
 import { R, S, mm, deg, type MM } from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
-import { HULL, LOWER_HALF_WIDTH } from '../../spec/hull.js';
+import { HULL, LOWER_HALF_WIDTH, SPONSON_HALF_WIDTH } from '../../spec/hull.js';
 import { structuralPlate, weldJoint } from '../emit.js';
 import type { BuildContext, PartResult } from '../types.js';
 import {
@@ -51,7 +51,6 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
   const noseBottomZ = mm(HULL.frontZ - noseRun);
 
   const rearRun = runFor(mm(roofY - floorY), ARMOUR.hull.rear.angle);
-  const rearSlant = slantFor(mm(roofY - floorY), ARMOUR.hull.rear.angle);
   const rearBottomZ = mm(HULL.rearZ + rearRun);
 
   // ---------------------------------------------------------------------------
@@ -118,14 +117,27 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
     namedEdges: [{ name: 'top', from: 2, to: 3 }],
   });
 
+  // Stepped like the driver's front plate: only as wide as the lower hull below
+  // the sponson floor, full superstructure width above it, so the sponsons are
+  // closed off at the tail rather than left open.
+  const rearCentreY = mm((floorY + roofY) / 2);
+  const rearLocalY = (worldY: MM): number =>
+    (worldY - rearCentreY) / Math.cos(R(ARMOUR.hull.rear.angle));
+  const rearOutline: Poly2 = [
+    v2(-LOWER_HALF_WIDTH, rearLocalY(floorY)),
+    v2(LOWER_HALF_WIDTH, rearLocalY(floorY)),
+    v2(LOWER_HALF_WIDTH, rearLocalY(HULL.sponsonFloorY)),
+    v2(SPONSON_HALF_WIDTH, rearLocalY(HULL.sponsonFloorY)),
+    v2(SPONSON_HALF_WIDTH, rearLocalY(roofY)),
+    v2(-SPONSON_HALF_WIDTH, rearLocalY(roofY)),
+    v2(-SPONSON_HALF_WIDTH, rearLocalY(HULL.sponsonFloorY)),
+    v2(-LOWER_HALF_WIDTH, rearLocalY(HULL.sponsonFloorY)),
+  ];
+
   const rearPlate = structuralPlate(ctx, {
-    outline: rect(HULL.lowerWidth, mm(rearSlant)),
+    outline: rearOutline,
     thickness: ARMOUR.hull.rear.thickness,
-    frame: facingAft(
-      mm((HULL.rearZ + rearBottomZ) / 2),
-      mm((floorY + roofY) / 2),
-      ARMOUR.hull.rear.angle,
-    ),
+    frame: facingAft(mm((HULL.rearZ + rearBottomZ) / 2), rearCentreY, ARMOUR.hull.rear.angle),
     chamfer: HULL.chamfer.structural,
     region: Region.Exterior,
     materials: { inner: 'interiorIvoryPaint' },
@@ -207,7 +219,7 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
   void belly;
   void nosePlate;
   void rearPlate;
-  void rearRun;
+
 
   return {
     name: 'lowerHull',

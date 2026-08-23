@@ -109,10 +109,17 @@ export const HULL = {
     /** Central engine access hatch. */
     hatchWidth: mm(900),
     hatchLength: mm(760),
+    hatchCentreZ: mm(-1660),
+    hatchThickness: mm(100),
     /** Radiator grilles either side of the centre hatch. */
     grilleWidth: mm(700),
     grilleLength: mm(900),
     grilleCentreX: mm(1000),
+    grilleCentreZ: mm(-2400),
+    /** The grille is a plate with slots, so the engine bay is genuinely open to air. */
+    grilleThickness: mm(22),
+    grilleSlats: 9,
+    grilleSlotWidth: mm(34),
   },
 
   /** Exhaust stacks on the rear plate. */
@@ -123,6 +130,16 @@ export const HULL = {
     /** Armoured guard around the base, added January 1943. */
     guardDiameter: mm(260),
     guardHeight: mm(330),
+    /** Height of the stack's base above the ground. */
+    baseY: mm(700),
+    /** Wall thicknesses: the stack is open at the top and can be looked down. */
+    wallThickness: mm(8),
+    guardWallThickness: mm(12),
+    /** Bolt circle fixing the guard to the rear plate. */
+    guardBoltCircleRadius: mm(104),
+    guardBoltCount: 6,
+    guardBoltHeight: mm(40),
+    guardBoltPlaneOffset: mm(52),
   },
 
   /** Track guards over each track run. */
@@ -255,9 +272,15 @@ export const HULL_META: MetaOf<typeof HULL> = {
     rearZ: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     hatchWidth: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     hatchLength: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
+    hatchCentreZ: { tol: 80, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
+    hatchThickness: { tol: 15, source: 'matches roof-level armour practice', confidence: 'estimated', note: DRAWING },
     grilleWidth: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     grilleLength: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     grilleCentreX: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
+    grilleCentreZ: { tol: 80, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
+    grilleThickness: { tol: 8, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    grilleSlats: { tol: 2, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    grilleSlotWidth: { tol: 8, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
   },
   exhaust: {
     centreX: { tol: 50, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING },
@@ -265,6 +288,13 @@ export const HULL_META: MetaOf<typeof HULL> = {
     height: { tol: 50, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING },
     guardDiameter: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     guardHeight: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    baseY: { tol: 60, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING },
+    wallThickness: { tol: 3, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    guardWallThickness: { tol: 4, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    guardBoltCircleRadius: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    guardBoltCount: { tol: 2, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    guardBoltHeight: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    guardBoltPlaneOffset: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
   },
   trackGuard: {
     thickness: { tol: 2, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },

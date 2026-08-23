@@ -116,6 +116,27 @@ export const FEIFEL = {
   trunkDiameter: mm(150),
   /** Lateral offset of each canister from the vehicle centreline, on the rear plate. */
   centreX: mm(1080),
+  /** Height of the canister's base above the ground. */
+  baseY: mm(940),
+  /**
+   * The canister's silhouette, as radius against height in millimetres: a
+   * rolled rim at the base, a straight body, and a domed cap carrying the
+   * clean-air outlet. Scaled off the drawing's rear view rather than
+   * dimensioned anywhere, which is why this assembly is declared as
+   * reconstruction.
+   */
+  profileRadius: [0, 140, 195, 195, 183, 107, 0],
+  profileHeight: [0, 0, 68, 654, 707, 752, 760],
+  /** Bolt circle fixing the canister to the rear plate. */
+  boltCircleRadius: mm(146),
+  /** How far forward of the canister axis that bolt circle sits. */
+  boltPlaneOffset: mm(166),
+  /** Height the trunk runs above the engine deck on its way forward. */
+  trunkRise: mm(130),
+  /** Lateral position where the trunk crosses the deck, inboard of the canister. */
+  trunkInboardX: mm(600),
+  /** How far short of the engine hatch the trunk terminates. */
+  trunkApproach: mm(260),
 } as const;
 
 export const PERFORMANCE = {
@@ -193,6 +214,14 @@ export const FEIFEL_META: MetaOf<typeof FEIFEL> = {
   mountingBoltsPerCanister: { tol: 0, source: 'T1I-feifel', confidence: 'secondary' },
   trunkDiameter: { tol: 20, source: 'T1I-feifel', confidence: 'estimated', note: DRAWING_ESTIMATE },
   centreX: { tol: 40, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  baseY: { tol: 60, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  profileRadius: { tol: 25, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  profileHeight: { tol: 40, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  boltCircleRadius: { tol: 25, source: 'T1I-feifel (four mounting points)', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  boltPlaneOffset: { tol: 25, source: 'T1I-feifel', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  trunkRise: { tol: 40, source: 'T1I-feifel', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  trunkInboardX: { tol: 60, source: 'T1I-feifel', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  trunkApproach: { tol: 60, source: 'T1I-feifel', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
 
 export const PERFORMANCE_META: MetaOf<typeof PERFORMANCE> = {

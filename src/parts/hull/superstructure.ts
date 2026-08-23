@@ -101,6 +101,13 @@ const TURRET_RING_SEGMENTS = 48;
 const HATCH_SEGMENTS = 28;
 const BORE_SEGMENTS = 24;
 
+/** How far a grille's frame overlaps the plate around its opening. */
+const GRILLE_LIP = 45;
+/** Clear space left at each end of a grille slot, so the frame stays continuous. */
+const GRILLE_MARGIN = 55;
+/** How far a hatch lid overlaps the rim it seats on. */
+const HATCH_OVERLAP = 40;
+
 export function buildSuperstructure(ctx: BuildContext): PartResult {
   const start = ctx.render.triangleCount;
   const frames = new Map<string, ReturnType<typeof facingUp>>();
@@ -213,12 +220,94 @@ export function buildSuperstructure(ctx: BuildContext): PartResult {
     roofLocal(HULL.radioHatch.centreZ),
   );
 
+  // Engine deck openings. The two radiator grilles and the central engine
+  // access hatch are cut through the same roof plate as everything else.
+  const deck = HULL.engineDeck;
+  const engineHatchAperture: Poly2 = translate(
+    rect(deck.hatchWidth, deck.hatchLength),
+    0,
+    roofLocal(deck.hatchCentreZ),
+  );
+  const grilleApertures: Poly2[] = (['left', 'right'] as const).map((side) =>
+    translate(
+      rect(deck.grilleWidth, deck.grilleLength),
+      (side === 'left' ? -1 : 1) * deck.grilleCentreX,
+      roofLocal(deck.grilleCentreZ),
+    ),
+  );
+
   structuralPlate(ctx, {
     outline: roofOutline,
-    holes: [turretAperture, driverHatchAperture, radioHatchAperture],
+    holes: [
+      turretAperture,
+      driverHatchAperture,
+      radioHatchAperture,
+      engineHatchAperture,
+      ...grilleApertures,
+    ],
     thickness: ARMOUR.hull.roof.thickness,
     frame: facingUp(HULL.roofY),
     chamfer: HULL.chamfer.side,
+    region: Region.Exterior,
+    materials: { inner: 'interiorIvoryPaint' },
+    wear: WEAR.footTraffic,
+  });
+
+  // ---------------------------------------------------------------------------
+  // Radiator grilles.
+  //
+  // Built as a plate with slots cut through it rather than as a stack of
+  // separate bars: it is one solid, it is genuinely open to the engine bay, and
+  // it is the same primitive and the same guarantees as every other piece of
+  // armour on the vehicle.
+  // ---------------------------------------------------------------------------
+  const slotPitch = deck.grilleLength / deck.grilleSlats;
+  const slotLength = mm(deck.grilleWidth - GRILLE_MARGIN * 2);
+
+  for (const side of ['left', 'right'] as const) {
+    const sign = side === 'left' ? -1 : 1;
+    const centreX = mm(sign * deck.grilleCentreX);
+    const slots: Poly2[] = [];
+    for (let i = 0; i < deck.grilleSlats; i++) {
+      const offset = (i - (deck.grilleSlats - 1) / 2) * slotPitch;
+      slots.push(
+        translate(
+          rect(slotLength, deck.grilleSlotWidth),
+          centreX,
+          roofLocal(mm(deck.grilleCentreZ + offset)),
+        ),
+      );
+    }
+
+    structuralPlate(ctx, {
+      outline: translate(
+        rect(mm(deck.grilleWidth + GRILLE_LIP * 2), mm(deck.grilleLength + GRILLE_LIP * 2)),
+        centreX,
+        roofLocal(deck.grilleCentreZ),
+      ),
+      holes: slots,
+      thickness: deck.grilleThickness,
+      frame: facingUp(HULL.roofY),
+      chamfer: HULL.chamfer.side,
+      region: Region.Exterior,
+      materials: { inner: 'machinedSteel', edge: 'machinedSteel' },
+      wear: WEAR.footTraffic,
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Engine access hatch lid, sitting closed on its aperture. The hinge and the
+  // opening arc arrive with the rest of the hatches.
+  // ---------------------------------------------------------------------------
+  structuralPlate(ctx, {
+    outline: translate(
+      rect(mm(deck.hatchWidth + HATCH_OVERLAP * 2), mm(deck.hatchLength + HATCH_OVERLAP * 2)),
+      0,
+      roofLocal(deck.hatchCentreZ),
+    ),
+    thickness: deck.hatchThickness,
+    frame: facingUp(HULL.roofY),
+    chamfer: HULL.chamfer.structural,
     region: Region.Exterior,
     materials: { inner: 'interiorIvoryPaint' },
     wear: WEAR.footTraffic,

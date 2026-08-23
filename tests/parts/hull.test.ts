@@ -20,9 +20,24 @@ describe('lower hull: dimensions', () => {
     );
   });
 
-  it('is as wide as the lower hull should be', () => {
+  it('is as wide as the lower hull amidships', () => {
+    // Measured rather than taken from the bounding box, because the rear plate
+    // is stepped: it runs out to the full superstructure width above the
+    // sponson floor so that the sponsons are closed off at the tail.
+    const hit = measureThicknessAlong(
+      geometry,
+      new Vector3(S(mm(2000)), S(mm(800)), 0),
+      new Vector3(-1, 0, 0),
+      S(mm(1500)),
+    );
+    expect(hit).not.toBeNull();
+    const sideAt = 2000 - toMM(hit!);
+    expect(Math.abs(sideAt * 2 - HULL.lowerWidth)).toBeLessThanOrEqual(30);
+  });
+
+  it('runs the rear plate out to the superstructure width above the sponsons', () => {
     const width = toMM(box.max.x - box.min.x);
-    expect(Math.abs(width - HULL.lowerWidth)).toBeLessThanOrEqual(30);
+    expect(Math.abs(width - HULL.superstructureWidth)).toBeLessThanOrEqual(30);
   });
 
   it('sits at the sourced ground clearance', () => {

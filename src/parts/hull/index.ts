@@ -4,8 +4,9 @@ import { AusfH_Feb1943, type VariantConfig } from '../../spec/variants.js';
 import { combineParts, type BuildContext, type PartResult } from '../types.js';
 import { buildLowerHull } from './lowerHull.js';
 import { buildSuperstructure } from './superstructure.js';
+import { buildRearFittings } from './rearFittings.js';
 
-export { buildLowerHull, buildSuperstructure };
+export { buildLowerHull, buildSuperstructure, buildRearFittings };
 
 /**
  * Normals smooth across joints shallower than this and stay hard beyond it.
@@ -18,7 +19,11 @@ const COLLISION_SMOOTHING_DEGREES = 60;
 
 /** Assemble the hull. */
 export function buildHull(ctx: BuildContext): PartResult {
-  return combineParts('hull', [buildLowerHull(ctx), buildSuperstructure(ctx)]);
+  return combineParts('hull', [
+    buildLowerHull(ctx),
+    buildSuperstructure(ctx),
+    buildRearFittings(ctx),
+  ]);
 }
 
 export interface BuiltAssembly {
