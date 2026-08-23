@@ -62,6 +62,18 @@ export const HULL = {
 
   /** Engine bay bulkhead position: the firewall between fighting compartment and engine. */
   firewallZ: mm(-1180),
+  /** Sheet, not armour: it separates two spaces, it does not stop anything. */
+  firewallThickness: mm(12),
+
+  /**
+   * The crew floor: plates over the torsion bars, which is what the crew
+   * actually stood on. Taking the belly plate as the floor puts them 200 mm too
+   * low and leaves sixteen bars running through their feet.
+   */
+  crewFloorHeight: mm(200),
+  crewFloorThickness: mm(10),
+  /** How far back from the nose the driver's own floor pan runs. */
+  driverFloorRun: mm(1350),
 
   /**
    * How a crew hatch lid meets the hole it sits in.
@@ -303,6 +315,8 @@ export const HULL = {
    * and chips uniformly across its face.
    */
   edgeBand: mm(60),
+  /** The same, for interior sheet and floor plates, which are smaller. */
+  interiorEdgeBand: mm(50),
 
   /** Tow shackles at each corner. */
   towPoint: {
@@ -425,6 +439,10 @@ export const HULL_META: MetaOf<typeof HULL> = {
   noseTopY: { tol: 90, source: 'REF-drawing side view, measured', confidence: 'estimated', note: MEASURED },
   glacisRun: { tol: 120, source: 'REF-drawing side view, measured', confidence: 'estimated', note: MEASURED },
   sponsonFloorY: { tol: 50, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
+  firewallThickness: { tol: 5, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING },
+  crewFloorHeight: { tol: 50, source: 'REF-cutaway: floor above the torsion bars', confidence: 'estimated', note: DRAWING },
+  crewFloorThickness: { tol: 4, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING },
+  driverFloorRun: { tol: 150, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING },
   firewallZ: { tol: 80, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING },
   hatchSeat: {
     clearance: { tol: 3, source: 'fitting practice for a dropped-in lid', confidence: 'estimated', note: DRAWING },
@@ -541,6 +559,7 @@ export const HULL_META: MetaOf<typeof HULL> = {
     belly: { tol: 3, source: 'fabrication practice', confidence: 'estimated', note: CHAMFER_NOTE },
     side: { tol: 3, source: 'fabrication practice', confidence: 'estimated', note: CHAMFER_NOTE },
   },
+  interiorEdgeBand: { tol: 15, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING },
   edgeBand: { tol: 20, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING },
   towPoint: {
     centreX: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },

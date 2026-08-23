@@ -75,6 +75,10 @@ const DETAIL_VIEWS = [
   { id: 'detail-hull-side', eye: [-3200, 1200, 1000], target: [-1850, 1000, 600] },
   { id: 'detail-rear', eye: [-2200, 1900, -5200], target: [-1080, 1400, -3158] },
   { id: 'detail-cupola', eye: [2600, 3100, 1400], target: [500, 2500, -985] },
+  // Inside, standing on the crew floor looking forward at the driver's station.
+  { id: 'interior-forward', eye: [400, 1150, 300], target: [700, 950, 2600], free: true },
+  // And aft, at the firewall and the engine bay beyond it.
+  { id: 'interior-aft', eye: [0, 1250, 900], target: [0, 1000, -2400], free: true },
   { id: 'detail-turret-rear', eye: [-1400, 3000, -4200], target: [0, 2200, -1455] },
 ];
 
@@ -136,8 +140,15 @@ await page.evaluate(() => window.__TIGER__.clearOrthoView());
 
 for (const view of [...QUARTER_VIEWS, ...DETAIL_VIEWS]) {
   await page.evaluate((v) => {
-    window.__TIGER__.teleport(v.eye[0] / 1000, v.eye[1] / 1000, v.eye[2] / 1000);
-    window.__TIGER__.lookAt(v.target[0] / 1000, v.target[1] / 1000, v.target[2] / 1000);
+    if (v.free === true) {
+      // Posed with a free camera: a player's eye is 1.6 m above their feet, and
+      // the fighting compartment is barely a metre tall.
+      window.__TIGER__.freeCamera(v.eye, v.target, v.fov);
+    } else {
+      window.__TIGER__.clearOrthoView();
+      window.__TIGER__.teleport(v.eye[0] / 1000, v.eye[1] / 1000, v.eye[2] / 1000);
+      window.__TIGER__.lookAt(v.target[0] / 1000, v.target[1] / 1000, v.target[2] / 1000);
+    }
     // Moving parts are posed explicitly, and settled rather than animated, so
     // a capture never catches a lid halfway.
     for (const a of window.__TIGER__.internals.articulations) {

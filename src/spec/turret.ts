@@ -166,6 +166,28 @@ export const TURRET = {
     edgeBand: mm(30),
   },
 
+  /**
+   * The turret basket: the floor hung from the ring that turns with the turret,
+   * carrying the gunner and loader round with the gun.
+   *
+   * Its diameter follows the ring's clear opening, which is UNCERTAINTY #2 —
+   * adopted at 1,830 mm and declared as reconstruction, not documented. If that
+   * figure moves, this moves with it and so does the whole crew layout, which
+   * is exactly why the register says the interior gets rebuilt rather than
+   * patched.
+   */
+  basket: {
+    /** Gap between the basket's rim and the ring's clear opening. */
+    clearance: mm(40),
+    floorThickness: mm(10),
+    /** How far the basket floor sits above the hull's crew floor. */
+    floorAboveHull: mm(180),
+    hangers: 6,
+    hangerDiameter: mm(45),
+    /** Where round the basket the hangers sit, as a fraction of its radius. */
+    hangerRadiusFraction: 0.88,
+  },
+
   /** Spare track links racked on the turret sides, visible in REF-photo-3. */
   spareTrackLinks: {
     perSide: 3,
@@ -299,6 +321,14 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     width: { tol: 50, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
     height: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
     depth: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
+  },
+  basket: {
+    clearance: { tol: 20, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    floorThickness: { tol: 4, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    floorAboveHull: { tol: 60, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    hangers: { tol: 2, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    hangerDiameter: { tol: 15, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    hangerRadiusFraction: { tol: 0.08, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   spareTrackLinks: {
     centreZ: { tol: 150, source: 'REF-photo-3: links racked on the turret side', confidence: 'estimated', note: DRAWING_ESTIMATE },

@@ -36,7 +36,7 @@ export class Engine {
    * foreshortens the far end and makes proportions unarguable in the wrong
    * direction.
    */
-  private overrideCamera: OrthographicCamera | null = null;
+  private overrideCamera: OrthographicCamera | PerspectiveCamera | null = null;
 
   constructor(
     private readonly container: HTMLElement,
@@ -105,7 +105,11 @@ export class Engine {
     const halfHeight = frustumHeight / 2;
     const halfWidth = halfHeight * aspect;
 
-    const camera = this.overrideCamera ?? new OrthographicCamera(0, 0, 0, 0, 0.1, 20000);
+    const existing = this.overrideCamera;
+    const camera =
+      existing instanceof OrthographicCamera
+        ? existing
+        : new OrthographicCamera(0, 0, 0, 0, 0.1, 20000);
     camera.left = -halfWidth;
     camera.right = halfWidth;
     camera.top = halfHeight;
@@ -126,10 +130,30 @@ export class Engine {
     this.overrideCamera = camera;
   }
 
+  /**
+   * Place a free perspective camera, independent of the player.
+   *
+   * Capture views were posed by teleporting the player, which works outside the
+   * tank and not at all inside it: `teleport` sets the FEET and a crewman's eye
+   * is a metre and a half above them, so an interior pose put the camera through
+   * the roof. Inside a compartment 1,075 mm tall there is no standing pose that
+   * sees anything.
+   */
+  setFreeCamera(eye: Vector3, target: Vector3, fovDegrees = 55): void {
+    const camera = new PerspectiveCamera(fovDegrees, this.camera.aspect, 0.02, 20000);
+    camera.position.copy(eye);
+    camera.lookAt(target);
+    camera.updateProjectionMatrix();
+    this.overrideCamera = camera;
+  }
+
   /** Millimetres per rendered pixel for the current orthographic view. */
   orthographicScale(): number | null {
-    if (!this.overrideCamera) return null;
-    const height = this.overrideCamera.top - this.overrideCamera.bottom;
+    const camera = this.overrideCamera;
+    // Only an orthographic view has a millimetres-per-pixel scale at all; a
+    // perspective one has a different scale on every row.
+    if (!(camera instanceof OrthographicCamera)) return null;
+    const height = camera.top - camera.bottom;
     return (height * 1000) / (this.container.clientHeight || 1);
   }
 

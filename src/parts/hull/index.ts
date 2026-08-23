@@ -8,6 +8,8 @@ import { buildRearFittings } from './rearFittings.js';
 import { buildFittings } from './fittings.js';
 import { buildRunningGear } from '../running/suspension.js';
 import { buildTracks } from '../running/track.js';
+import { buildInteriorStructure } from '../interior/structure.js';
+import { buildPowertrain } from '../interior/powertrain.js';
 import { buildTurret } from '../turret/shell.js';
 import { buildGun } from '../turret/gun.js';
 import { buildTurretFittings } from '../turret/fittings.js';
@@ -39,6 +41,8 @@ export function buildHullOnly(ctx: BuildContext): PartResult {
     buildFittings(ctx),
     buildRunningGear(ctx),
     buildTracks(ctx),
+    buildInteriorStructure(ctx),
+    buildPowertrain(ctx),
   ]);
 }
 

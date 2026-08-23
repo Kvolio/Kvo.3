@@ -109,8 +109,12 @@ export const MATERIAL_PRESETS = {
   /** Rolled plate edges and cut faces: paint takes badly, so they rust first. */
   machinedSteel: {
     ...BASE,
+    // Warmed very slightly off neutral. At 0x7d7f82 the blue channel led, and
+    // with metalness this high the material mirrors whatever is around it — a
+    // blue sky outside, and a blue sky through the hatches inside. Every
+    // machined part read as blue plastic. Steel is not blue.
     id: 'machinedSteel',
-    paint: c(0x7d7f82),
+    paint: c(0x83817d),
     chipAmount: 0.15,
     dust: 0.1,
     rust: 0.45,

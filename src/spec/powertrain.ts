@@ -35,6 +35,10 @@ export const ENGINE = {
   /** Dry sump, litres. */
   oilCapacity: 28,
   fuelPumps: 4,
+  /** Where the block sits: engine at the REAR, behind the firewall. */
+  centreZ: mm(-2050),
+  /** Sump clearance above the hull floor. */
+  baseAboveFloor: mm(60),
 } as const;
 
 export const COOLING = {
@@ -46,6 +50,10 @@ export const COOLING = {
   /** Twin fan assemblies each side, on a two-speed drive. */
   fanAssembliesPerSide: 2,
   fanDiameter: mm(520),
+  /** Radiator blocks flank the engine, one either side. */
+  radiatorCentreX: mm(920),
+  radiatorCentreZ: mm(-2100),
+  radiatorBaseAboveFloor: mm(280),
 } as const;
 
 export const FUEL = {
@@ -63,12 +71,18 @@ export const TRANSMISSION = {
   ratioFirst: 15.4,
   /** Overall ratio in eighth. */
   ratioTop: 0.98,
-  /** The gearbox sits to the RIGHT of the driver, not on the centreline. */
-  centreX: mm(430),
   centreZ: mm(2050),
   length: mm(1150),
   width: mm(760),
   height: mm(780),
+  /**
+   * The propeller shaft, engine to gearbox, under the turret basket.
+   *
+   * The Tiger's engine is at the rear and its sprockets are at the front, so
+   * this runs the whole length of the fighting compartment. It is why the
+   * basket floor sits where it does.
+   */
+  propShaftDiameter: mm(90),
 } as const;
 
 export const STEERING = {
@@ -80,8 +94,13 @@ export const STEERING = {
    * interior annotations.
    */
   designation: 'regenerative dual-radius, Merritt-Brown derived',
-  /** Mounted transversely in the bow, ahead of the driver and radio operator. */
-  centreZ: mm(2620),
+  /**
+   * Mounted transversely in the bow, ahead of the driver and radio operator.
+   *
+   * Moved back from 2,620 mm: at that station the unit's forward face stood
+   * outside the nose armour, which the interior clash test now refuses.
+   */
+  centreZ: mm(2450),
   /** Distinct turn radii available in each gear. */
   radiiPerGear: 2,
   /** Neutral turn diameter — the Tiger pivots within its own length. */
@@ -89,6 +108,13 @@ export const STEERING = {
   /** Argus disc brakes on each drive shaft; also the service brakes. */
   brakeDiscDiameter: mm(550),
   steeringWheelDiameter: mm(400),
+  /** Transverse in the bow: it spans most of the lower hull's width. */
+  widthFraction: 0.82,
+  unitHeight: mm(520),
+  unitLength: mm(480),
+  /** Driver's seat and wheel, relative to the hull. */
+  wheelCentreY: mm(1100),
+  wheelCentreZ: mm(2260),
 } as const;
 
 export const FINAL_DRIVE = {
@@ -168,6 +194,8 @@ export const ENGINE_META: MetaOf<typeof ENGINE> = {
   height: { tol: 30, source: 'TIC-maybach (3 ft 1 in)', confidence: 'secondary' },
   carburettors: { count: { tol: 0, source: 'TIC-maybach', confidence: 'secondary' } },
   oilCapacity: { tol: 1, source: 'TIC-maybach', confidence: 'secondary' },
+  centreZ: { tol: 200, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  baseAboveFloor: { tol: 40, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
   fuelPumps: { tol: 0, source: 'TIC-maybach', confidence: 'secondary' },
 };
 
@@ -177,6 +205,9 @@ export const COOLING_META: MetaOf<typeof COOLING> = {
   radiatorHeight: { tol: 40, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
   radiatorThickness: { tol: 20, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
   fanAssembliesPerSide: { tol: 0, source: 'TIC-maybach', confidence: 'secondary' },
+  radiatorCentreX: { tol: 120, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  radiatorCentreZ: { tol: 200, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  radiatorBaseAboveFloor: { tol: 80, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
   fanDiameter: { tol: 40, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
 
@@ -190,11 +221,11 @@ export const TRANSMISSION_META: MetaOf<typeof TRANSMISSION> = {
   reverseGears: { tol: 0, source: 'TIC-trans', confidence: 'secondary' },
   ratioFirst: { tol: 0.1, source: 'TIC-trans', confidence: 'secondary' },
   ratioTop: { tol: 0.02, source: 'TIC-trans', confidence: 'secondary' },
-  centreX: { tol: 60, source: 'TIC-trans (right of the driver) + REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
   centreZ: { tol: 60, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
   length: { tol: 60, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
   width: { tol: 50, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
   height: { tol: 50, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  propShaftDiameter: { tol: 25, source: 'REF-cutaway: shaft under the basket', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
 
 export const STEERING_META: MetaOf<typeof STEERING> = {
@@ -202,6 +233,11 @@ export const STEERING_META: MetaOf<typeof STEERING> = {
   radiiPerGear: { tol: 0, source: 'TIC-trans', confidence: 'secondary' },
   neutralTurnDiameter: { tol: 20, source: 'TIC-trans', confidence: 'secondary' },
   brakeDiscDiameter: { tol: 10, source: 'TIC-trans (55 cm Argus)', confidence: 'secondary' },
+  widthFraction: { tol: 0.1, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  unitHeight: { tol: 90, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  unitLength: { tol: 90, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  wheelCentreY: { tol: 90, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  wheelCentreZ: { tol: 150, source: 'REF-cutaway: interior layout, blocked out to envelope', confidence: 'estimated', note: DRAWING_ESTIMATE },
   steeringWheelDiameter: { tol: 40, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
 

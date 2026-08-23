@@ -356,6 +356,15 @@ window.__TIGER__ = {
     environment.fill.intensity = on ? 0 : 0.95;
     engine.render();
   },
+  /** Free camera for capture poses that a player's body could not reach. */
+  freeCamera: (eye: number[], target: number[], fov?: number) => {
+    engine.setFreeCamera(
+      new Vector3(eye[0]! / 1000, eye[1]! / 1000, eye[2]! / 1000),
+      new Vector3(target[0]! / 1000, target[1]! / 1000, target[2]! / 1000),
+      fov,
+    );
+    engine.render();
+  },
   clearOrthoView: () => {
     engine.clearOrthographicView();
     engine.render();
