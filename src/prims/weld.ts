@@ -129,6 +129,12 @@ export function emitWeld(mb: MeshBuilder, spec: WeldSpec): { triangleCount: numb
     material: 'weldBead',
     region,
     cap: true,
+    // The section is expressed in (basisU, basisV), so the sweep must use the
+    // same frame. Left to its own devices it seeds the frame from a world axis,
+    // and the bead ends up rolled about the seam by an arbitrary angle — which
+    // happens to look right whenever the two frames coincide, and is wrong
+    // everywhere else. It also made the two sides of the hull disagree.
+    initialNormal: basisU,
     offsetAt: (t) => {
       const s = t * length;
       // A hand-laid bead swells and shrinks as the welder works: a regular

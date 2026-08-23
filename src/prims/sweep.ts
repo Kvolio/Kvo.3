@@ -27,12 +27,22 @@ export interface SweepOptions {
   readonly region?: Region;
   readonly wear?: number;
   readonly cap?: boolean;
+  /**
+   * Fix the frame's normal at the start of the path.
+   *
+   * Without this the frame is seeded from whichever axis is least parallel to
+   * the tangent, which is fine for a hose but wrong for anything whose section
+   * has a required orientation — a weld fillet has to sit in the corner it is
+   * welding, not at an arbitrary roll about the seam.
+   */
+  readonly initialNormal?: Vector3;
 }
 
 /** Parallel-transport frames along a path. */
 export function transportFrames(
   path: readonly Vector3[],
   closed = false,
+  initialNormal?: Vector3,
 ): { tangent: Vector3; normal: Vector3; binormal: Vector3 }[] {
   const n = path.length;
   const frames: { tangent: Vector3; normal: Vector3; binormal: Vector3 }[] = [];
@@ -46,10 +56,22 @@ export function transportFrames(
     tangents.push(t.normalize());
   }
 
-  // Seed the first normal with whichever axis is least parallel to the tangent.
   const t0 = tangents[0]!;
-  const seed = Math.abs(t0.y) < 0.9 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0);
-  let normal = new Vector3().crossVectors(seed, t0).normalize();
+  let normal: Vector3;
+  if (initialNormal) {
+    // Orthogonalise against the tangent rather than trusting the caller to
+    // have done it; a hint that is slightly off should still give a valid frame.
+    normal = initialNormal.clone().addScaledVector(t0, -initialNormal.dot(t0));
+    if (normal.lengthSq() < 1e-12) {
+      const fallback = Math.abs(t0.y) < 0.9 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0);
+      normal.crossVectors(fallback, t0);
+    }
+    normal.normalize();
+  } else {
+    // Seed from whichever axis is least parallel to the tangent.
+    const seed = Math.abs(t0.y) < 0.9 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0);
+    normal = new Vector3().crossVectors(seed, t0).normalize();
+  }
 
   for (let i = 0; i < n; i++) {
     const t = tangents[i]!;
@@ -104,6 +126,7 @@ export function emitSweep(mb: MeshBuilder, opts: SweepOptions): { triangleCount:
     region,
     wear,
     cap = true,
+    initialNormal,
   } = opts;
 
   if (path.length < 2 || rawProfile.length < 3) return { triangleCount: 0 };
@@ -115,7 +138,7 @@ export function emitSweep(mb: MeshBuilder, opts: SweepOptions): { triangleCount:
   const profile = ensureCCW(rawProfile);
 
   const start = mb.triangleCount;
-  const frames = transportFrames(path, closed);
+  const frames = transportFrames(path, closed, initialNormal);
 
   // Profile centroid, so radial offsets push outward from the section's middle.
   const centroid = new Vector2();

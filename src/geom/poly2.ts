@@ -231,6 +231,11 @@ export function minEdgeLength(poly: Poly2): number {
   return best;
 }
 
+/** Mirror a polygon about the local Y axis. Winding flips; callers normalise. */
+export function mirrorX(poly: Poly2): Vector2[] {
+  return poly.map((p) => new Vector2(-p.x, p.y));
+}
+
 /** Translate a polygon. */
 export function translate(poly: Poly2, dx: number, dy: number): Vector2[] {
   return poly.map((p) => new Vector2(p.x + dx, p.y + dy));

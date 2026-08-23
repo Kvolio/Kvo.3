@@ -1,4 +1,5 @@
 import { Matrix4 } from 'three';
+import { mirrorX, type Poly2 } from '../../geom/poly2.js';
 import { R, S, type DEG, type MM } from '../../spec/units.js';
 import type { Side } from '../../spec/units.js';
 
@@ -29,8 +30,16 @@ export function facingDown(height: MM): Matrix4 {
 
 /**
  * A vertical plate on one side, facing outboard.
- * Outline x runs aft on the starboard side and forward on the port side, so
- * that both are authored from the same profile.
+ *
+ * Placing the two sides means rotating through plus or minus ninety degrees
+ * about the vertical, and those two rotations map the plate's local X axis to
+ * OPPOSITE world directions: forward on the port side, aft on the starboard.
+ * Feed the same profile to both and the starboard plate comes out reversed end
+ * for end, with its nose slope at the tail — invisible from any angle showing
+ * only one side, and invisible to a bounding box.
+ *
+ * Author profiles in world-Z terms and pass them through `sideProfile` so the
+ * handedness is handled once, in the open, rather than at each call site.
  */
 export function facingOutboard(side: Side, x: MM): Matrix4 {
   const sign = side === 'left' ? -1 : 1;
@@ -52,11 +61,34 @@ export function facingForward(z: MM, y: MM, tilt: DEG): Matrix4 {
   return m;
 }
 
+/**
+ * A plate across the vehicle facing forward and UP, leaning back as it rises.
+ *
+ * The mirror of `facingForward`, and a distinction worth keeping separate: the
+ * nose plate leans back as it descends, so its normal points forward and down,
+ * while the upper glacis leans back as it climbs, so its normal points forward
+ * and up. Both are quoted at an angle from vertical, and using the wrong one
+ * gives a plate that is the right size and shape and faces into the ground.
+ */
+export function facingUpForward(z: MM, y: MM, tilt: DEG): Matrix4 {
+  const m = new Matrix4().makeRotationX(-R(tilt));
+  m.setPosition(0, S(y), S(z));
+  return m;
+}
+
 /** A plate across the vehicle facing aft, tilted back from vertical. */
 export function facingAft(z: MM, y: MM, tilt: DEG): Matrix4 {
   const m = new Matrix4().makeRotationY(Math.PI).multiply(new Matrix4().makeRotationX(R(tilt)));
   m.setPosition(0, S(y), S(z));
   return m;
+}
+
+/**
+ * Adapt a side profile authored in world-Z to the side it is being placed on.
+ * See `facingOutboard` for why this is necessary.
+ */
+export function sideProfile(side: Side, profileInWorldZ: Poly2): Poly2 {
+  return side === 'left' ? profileInWorldZ : mirrorX(profileInWorldZ);
 }
 
 /** Horizontal run of a plate of the given height at the given angle from vertical. */

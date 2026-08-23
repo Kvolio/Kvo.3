@@ -6,7 +6,15 @@ import { ARMOUR } from '../../spec/armour.js';
 import { HULL, LOWER_HALF_WIDTH } from '../../spec/hull.js';
 import { structuralPlate, weldJoint } from '../emit.js';
 import type { BuildContext, PartResult } from '../types.js';
-import { facingAft, facingDown, facingForward, facingOutboard, runFor, slantFor } from './frames.js';
+import {
+  facingAft,
+  facingDown,
+  facingForward,
+  facingOutboard,
+  runFor,
+  sideProfile as sideProfileFor,
+  slantFor,
+} from './frames.js';
 
 /**
  * The lower hull — the Wanne.
@@ -74,7 +82,7 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
   // Authored as a side profile in (aft-forward, up) and placed outboard. Both
   // sides use the same outline; `facingOutboard` handles the handedness.
   // ---------------------------------------------------------------------------
-  const sideProfile: Poly2 = [
+  const lowerSideProfile: Poly2 = [
     v2(rearBottomZ, floorY),
     v2(noseBottomZ, floorY),
     v2(HULL.frontZ, noseTopY),
@@ -84,7 +92,7 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
   ];
   for (const side of ['left', 'right'] as const) {
     structuralPlate(ctx, {
-      outline: sideProfile,
+      outline: sideProfileFor(side, lowerSideProfile),
       thickness: sideThickness,
       frame: facingOutboard(side, LOWER_HALF_WIDTH),
       chamfer: HULL.chamfer.side,

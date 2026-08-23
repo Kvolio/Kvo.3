@@ -59,7 +59,7 @@ export const HULL = {
   /** Driver's hatch centre, on the roof, port side. */
   driverHatch: {
     centreX: mm(-560),
-    centreZ: mm(1880),
+    centreZ: mm(1700),
     diameter: mm(600),
     thickness: mm(100),
     openAngle: deg(95),
@@ -68,7 +68,7 @@ export const HULL = {
   /** Radio operator's hatch, mirroring the driver's to starboard. */
   radioHatch: {
     centreX: mm(560),
-    centreZ: mm(1880),
+    centreZ: mm(1700),
     diameter: mm(600),
     thickness: mm(100),
     openAngle: deg(95),
@@ -87,6 +87,12 @@ export const HULL = {
   hullMGMount: {
     centreX: mm(560),
     centreY: mm(1430),
+    /**
+     * The bore cut through the front plate. Smaller than the ball mount that
+     * caps it, because the ball has to seat against armour rather than pass
+     * through it.
+     */
+    apertureDiameter: mm(200),
   },
 
   /** Bosch headlights on the glacis. Two of them until August 1943. */
@@ -237,6 +243,7 @@ export const HULL_META: MetaOf<typeof HULL> = {
   hullMGMount: {
     centreX: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     centreY: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
+    apertureDiameter: { tol: 25, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
   },
   headlight: {
     centreX: { tol: 50, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
