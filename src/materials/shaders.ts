@@ -86,7 +86,19 @@ vec4 procTriplanar(vec3 p, vec3 n, float scale) {
   vec4 xs = texture2D(uNoiseAtlas, p.yz * scale);
   vec4 ys = texture2D(uNoiseAtlas, p.xz * scale);
   vec4 zs = texture2D(uNoiseAtlas, p.xy * scale);
-  return xs * blend.x + ys * blend.y + zs * blend.z;
+  vec4 sampled = xs * blend.x + ys * blend.y + zs * blend.z;
+
+  // Fade toward the noise's own mean once its features fall below a pixel.
+  //
+  // Without this the fine channel keeps full contrast no matter how small it
+  // gets on screen, and a plate seen from any distance reads as coloured
+  // speckle rather than as steel. It is ordinary aliasing: the signal outruns
+  // the sampling rate, so it has to be damped rather than drawn. fwidth() gives
+  // the world-space footprint of one pixel, and once that footprint spans much
+  // more than a noise period there is no detail left to resolve.
+  float footprint = max(fwidth(p.x), max(fwidth(p.y), fwidth(p.z))) * scale;
+  float resolved = 1.0 - smoothstep(0.35, 1.2, footprint);
+  return mix(vec4(0.5), sampled, resolved);
 }
 
 struct ProcSurface {

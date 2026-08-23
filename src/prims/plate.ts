@@ -272,10 +272,23 @@ export function emitPlate(mb: MeshBuilder, spec: PlateSpec): PlateResult {
   // works for both because their winding already differs.
   // ---------------------------------------------------------------------------
 
+  /**
+   * Distance from the nearest edge, for a vertex on the plate's rim.
+   *
+   * Measured WITHIN the rim face: a point half way through the plate's
+   * thickness is that far from either face, and so from the nearest arris.
+   * This was flat zero, which is right for the rim of a 25 mm roof — the whole
+   * rim is an edge — and badly wrong for a plate extruded far enough that its
+   * rim IS the visible surface. The turret's side and rear armour is one such
+   * plate, 855 mm deep, and it chipped at full strength over every square
+   * millimetre of it.
+   */
+  const rimEdgeDist = (z: number): number => Math.min(Math.abs(z), thickness - Math.abs(z));
+
   const emitLoopVerts = (loop: readonly Vector2[], z: number): number[] =>
     loop.map((p) =>
       mb.vert(place(p.x, p.y, z), OUT, new Vector2(p.x / 1000, p.y / 1000), {
-        edgeDist: 0,
+        edgeDist: rimEdgeDist(z),
         region,
         wear,
       }),
