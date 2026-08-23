@@ -27,7 +27,7 @@ import { buildAssembly, buildHull } from './parts/hull/index.js';
 import { mountAssembly } from './assembly/mount.js';
 import { SPEC } from './spec/index.js';
 import { AusfH_Feb1943 } from './spec/variants.js';
-import { S } from './spec/units.js';
+import { S, mm } from './spec/units.js';
 
 /**
  * Entry point.
@@ -132,7 +132,8 @@ CameraRig.aimAt(player, new Vector3(0, 1.4, 0));
 const rig = new CameraRig();
 const hud = new HUD(container, input);
 const mobile = new MobileControls(container, touch);
-mobile.setVisible((navigator.maxTouchPoints ?? 0) > 0);
+const mobileVisible = (navigator.maxTouchPoints ?? 0) > 0;
+mobile.setVisible(mobileVisible);
 
 const overlay = debugEnabled(search) ? new DebugOverlay(container) : null;
 
@@ -194,6 +195,46 @@ window.__TIGER__ = {
    * the real resolver and the real input providers.
    */
   step: (steps: number) => loop.advance(steps),
+  /** Frame an orthographic elevation, for silhouette measurement. */
+  orthoView: (eye: number[], target: number[], frustumHeightMM: number) => {
+    engine.setOrthographicView(
+      new Vector3(S(mm(eye[0]!)), S(mm(eye[1]!)), S(mm(eye[2]!))),
+      new Vector3(S(mm(target[0]!)), S(mm(target[1]!)), S(mm(target[2]!))),
+      S(mm(frustumHeightMM)),
+    );
+    engine.render();
+  },
+  orthoScale: () => engine.orthographicScale(),
+  /**
+   * Strip the scene to the vehicle alone against a flat background.
+   *
+   * A silhouette is only measurable if there is something to threshold against.
+   * With the sky, the terrain and the reference envelope in shot, every pixel is
+   * some shade of ochre and the outline has to be judged by eye — which is what
+   * let a wedge-shaped front hull survive this long.
+   */
+  silhouetteMode: (on: boolean) => {
+    // The overlays are not part of the vehicle. The controls hint in
+    // particular is a wide band of grey text across the bottom of the frame,
+    // and left in shot it reads as 3.7 m of tank.
+    hud.root.style.display = on ? 'none' : '';
+    mobile.root.style.display = on ? 'none' : mobileVisible ? '' : 'none';
+    overlay?.root.style.setProperty('display', on ? 'none' : '');
+    ground.mesh.visible = !on;
+    environment.sky.visible = !on;
+    envelopeLines.visible = !on;
+    // Unlit vehicle against a white field: the mask is simply everything that
+    // is not the background.
+    engine.renderer.setClearColor(on ? 0xffffff : 0x000000, 1);
+    engine.scene.environmentIntensity = on ? 0 : 1.15;
+    environment.sun.intensity = on ? 0 : 2.6;
+    environment.fill.intensity = on ? 0 : 0.95;
+    engine.render();
+  },
+  clearOrthoView: () => {
+    engine.clearOrthographicView();
+    engine.render();
+  },
   frames: () => loop.frames,
   // Live handles for the Playwright harness and for diagnosing render faults.
   // Kept deliberately small: poses, statistics and the objects a visual test

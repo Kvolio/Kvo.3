@@ -1,5 +1,8 @@
+import type {
+  Vector3} from 'three';
 import {
   ACESFilmicToneMapping,
+  OrthographicCamera,
   PCFSoftShadowMap,
   PerspectiveCamera,
   Scene,
@@ -24,6 +27,16 @@ export class Engine {
   readonly canvas: HTMLCanvasElement;
 
   private resizeObserver: ResizeObserver | null = null;
+
+  /**
+   * When set, rendering uses this instead of the player's camera.
+   *
+   * Orthographic elevations are how a silhouette is judged against a scale
+   * drawing — a perspective view of a 6.3 m hull from any practical distance
+   * foreshortens the far end and makes proportions unarguable in the wrong
+   * direction.
+   */
+  private overrideCamera: OrthographicCamera | null = null;
 
   constructor(
     private readonly container: HTMLElement,
@@ -79,7 +92,42 @@ export class Engine {
   }
 
   render(): void {
-    this.renderer.render(this.scene, this.camera);
+    this.renderer.render(this.scene, this.overrideCamera ?? this.camera);
+  }
+
+  /**
+   * Look at the vehicle down a fixed axis with an orthographic camera, framed to
+   * an exact height in scene units so the render has a known millimetres-per-
+   * pixel scale and can be measured rather than eyeballed.
+   */
+  setOrthographicView(eye: Vector3, target: Vector3, frustumHeight: number): void {
+    const aspect = this.camera.aspect;
+    const halfHeight = frustumHeight / 2;
+    const halfWidth = halfHeight * aspect;
+
+    const camera = this.overrideCamera ?? new OrthographicCamera(0, 0, 0, 0, 0.1, 20000);
+    camera.left = -halfWidth;
+    camera.right = halfWidth;
+    camera.top = halfHeight;
+    camera.bottom = -halfHeight;
+    camera.position.copy(eye);
+    // Looking straight down needs an up vector that is not also straight down.
+    const looksVertical = Math.abs(eye.clone().sub(target).normalize().y) > 0.99;
+    camera.up.set(0, looksVertical ? 0 : 1, looksVertical ? -1 : 0);
+    camera.lookAt(target);
+    camera.updateProjectionMatrix();
+    this.overrideCamera = camera;
+  }
+
+  /** Millimetres per rendered pixel for the current orthographic view. */
+  orthographicScale(): number | null {
+    if (!this.overrideCamera) return null;
+    const height = this.overrideCamera.top - this.overrideCamera.bottom;
+    return (height * 1000) / (this.container.clientHeight || 1);
+  }
+
+  clearOrthographicView(): void {
+    this.overrideCamera = null;
   }
 
   /** Draw calls, triangles and memory for the debug overlay and the perf tests. */
