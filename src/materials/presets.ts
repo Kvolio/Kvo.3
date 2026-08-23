@@ -91,7 +91,7 @@ const BASE: Omit<MaterialPreset, 'id'> = {
   noiseScaleFine: 7.0,
 };
 
-export const MATERIAL_PRESETS: Record<string, MaterialPreset> = {
+export const MATERIAL_PRESETS = {
   // ---------------------------------------------------------------------------
   // Exterior
   // ---------------------------------------------------------------------------
@@ -392,7 +392,22 @@ export const MATERIAL_PRESETS: Record<string, MaterialPreset> = {
 };
 
 export function presetFor(id: string): MaterialPreset {
-  return MATERIAL_PRESETS[id] ?? MATERIAL_PRESETS['default']!;
+  // Still takes a plain string, because ids also arrive from the URL and from
+  // the debug overlay, where they genuinely are untrusted.
+  return (
+    (MATERIAL_PRESETS as Record<string, MaterialPreset>)[id] ?? MATERIAL_PRESETS.default
+  );
 }
 
 export const PRESET_IDS: readonly string[] = Object.keys(MATERIAL_PRESETS);
+
+/**
+ * The name of a material in the table above.
+ *
+ * This was `string`, and a misspelling therefore fell through to the magenta
+ * fallback and rendered as a bright pink track guard that nothing failed on.
+ * Deriving the type from the table makes a wrong name a compile error, which is
+ * the same bargain the spec's provenance types make: if the compiler can hold
+ * the invariant, it should.
+ */
+export type MaterialId = keyof typeof MATERIAL_PRESETS;

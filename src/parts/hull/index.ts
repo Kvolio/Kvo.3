@@ -5,6 +5,7 @@ import { combineParts, type BuildContext, type PartResult } from '../types.js';
 import { buildLowerHull } from './lowerHull.js';
 import { buildSuperstructure } from './superstructure.js';
 import { buildRearFittings } from './rearFittings.js';
+import { buildFittings } from './fittings.js';
 
 export { buildLowerHull, buildSuperstructure, buildRearFittings };
 
@@ -23,6 +24,7 @@ export function buildHull(ctx: BuildContext): PartResult {
     buildLowerHull(ctx),
     buildSuperstructure(ctx),
     buildRearFittings(ctx),
+    buildFittings(ctx),
   ]);
 }
 

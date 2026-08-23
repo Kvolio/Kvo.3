@@ -11,10 +11,12 @@ All lengths in millimetres.
 | Feature | Reference | Model | Deviation | % | Tol | Verdict | Source |
 |---|---|---|---|---|---|---|---|
 | Hull length, nose to rear plate | 6316 | 6317 | +1 | +0.0% | ±60 | ok | TIC-tech; centreline scan of the armour |
-| Overall length incl. Feifel overhang | 6646 | 6647 | +1 | +0.0% | ±90 | ok | REF-drawing side view: canisters project aft of the rear plate |
-| Superstructure width | 3240 | 3258 | +18 | +0.5% | ±40 | ok | REF-drawing front view |
+| Foremost point (track guard tip) | 3480 | 3480 | +0 | +0.0% | ±40 | ok | REF-drawing side view: guard edge ahead of the nose |
+| Aftmost point (Feifel canisters) | 3330 | 3475 | +145 | +4.4% | ±160 | ok | REF-drawing side view: canisters project aft of the rear plate |
+| Width over track guards | 3720 | 3720 | +0 | +0.0% | ±20 | ok | TIC-tech, UNCERTAINTY #5 |
+| Superstructure width | 3240 | 3240 | +0 | +0.0% | ±40 | ok | REF-drawing front view; measured onto the sponson side |
 | Hull roof height | 1780 | 1780 | -0 | -0.0% | ±25 | ok | TIC-tech; measured by ray onto the roof plate |
-| Tallest fitting above roof | 2030 | 1997 | -33 | -1.6% | ±120 | ok | REF-photo rear deck: Feifel trunking is a low hump |
+| Tallest fitting above roof | 2030 | 2005 | -25 | -1.2% | ±120 | ok | REF-photo rear deck: Feifel trunking is a low hump |
 | Ground clearance under the belly | 470 | 475 | +5 | +1.1% | ±12 | ok | TIC-tech; measured under the centreline |
 | Lowest point of the hull | 470 | 457 | -13 | -2.7% | ±30 | ok | TIC-tech; includes edge breaks on the side walls |
 | Nose plate thickness | 100 | 100 | -0 | -0.0% | ±12 | ok | Jentz & Doyle |

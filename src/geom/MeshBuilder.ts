@@ -21,7 +21,11 @@ import {
  * boundary.
  */
 
-export type MaterialId = string;
+// Re-exported so geometry code can name a material without reaching into the
+// materials package. The type is derived from the preset table, so a misspelt
+// name fails to compile rather than rendering magenta.
+import type { MaterialId } from '../materials/presets.js';
+export type { MaterialId };
 
 export interface TransferableGeometry {
   readonly position: Float32Array;

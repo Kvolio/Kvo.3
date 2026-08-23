@@ -93,7 +93,7 @@ export function buildHatchLid(ctx: BuildContext, id: HatchId): HatchGeometry {
       new Vector2(0, S(roofTop)),
     ],
     segments: LID_SEGMENTS,
-    material: 'rolledArmour',
+    material: 'armourPaintedExterior',
     region: Region.Exterior,
     origin: new Vector3(S(spec.centreX), 0, S(spec.centreZ)),
     edgeDist: SEAT_FLANGE,

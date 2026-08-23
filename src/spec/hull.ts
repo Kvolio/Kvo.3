@@ -152,6 +152,11 @@ export const HULL = {
   /** Bosch headlights on the glacis. Two of them until August 1943. */
   headlight: {
     centreX: mm(1080),
+    /**
+     * Where along the glacis they stand. The glacis is only a 550 mm run, so
+     * this is most of the way back along it, clear of the nose seam.
+     */
+    standZ: mm(2780),
     diameter: mm(180),
     depth: mm(120),
   },
@@ -210,6 +215,43 @@ export const HULL = {
     outerX: mm(OVERALL.widthOverCombatTracks / 2),
     /** Height above ground at which the guard sits. */
     height: mm(1120),
+    /**
+     * The guard runs past both ends of the hull. At the front this is what the
+     * 1:50 drawing shows as a thin edge ahead of the nose, and reading that
+     * edge as armour is what makes the front look like a vertical slab.
+     */
+    frontZ: mm(3480),
+    rearZ: mm(-3330),
+    /**
+     * Sweep-back of the forward tip, outboard corner to inboard. From January
+     * 1943 the front sections were cut as triangles rather than left square.
+     */
+    frontTriangleRun: mm(420),
+    /** Matching sweep at the tail, so the guard does not end in a square edge. */
+    rearTriangleRun: mm(210),
+  },
+
+  /**
+   * Minenabwurfvorrichtung "S" — the S-mine dischargers, five of them, on the
+   * superstructure roof edge. Short mortars firing a bounding anti-personnel
+   * charge, for clearing infantry off the vehicle.
+   *
+   * See UNCERTAINTY #13: the count of five is well attested, their exact
+   * stations are not.
+   */
+  sMineDischarger: {
+    tubeDiameter: mm(96),
+    tubeHeight: mm(190),
+    /** Wall of the tube, so it reads as open rather than as a peg. */
+    wallThickness: mm(10),
+    baseDiameter: mm(150),
+    baseHeight: mm(35),
+    /** Inboard from the superstructure side, so the tube clears the edge. */
+    inset: mm(130),
+    /** Longitudinal stations, port and starboard alike. */
+    stationsZ: [mm(2050), mm(-450)],
+    /** The fifth sits on the centreline at the tail. */
+    rearStationZ: mm(-2980),
   },
 
   /**
@@ -388,6 +430,7 @@ export const HULL_META: MetaOf<typeof HULL> = {
     apertureDiameter: { tol: 25, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
   },
   headlight: {
+    standZ: { tol: 90, source: 'REF-photo-2: lamps stand on the glacis', confidence: 'estimated', note: DRAWING },
     centreX: { tol: 50, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     diameter: { tol: 20, source: 'Bosch pattern headlight', confidence: 'estimated', note: DRAWING },
     depth: { tol: 20, source: 'Bosch pattern headlight', confidence: 'estimated', note: DRAWING },
@@ -425,6 +468,20 @@ export const HULL_META: MetaOf<typeof HULL> = {
     thickness: { tol: 2, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     outerX: { tol: 15, source: 'derived from OVERALL.widthOverCombatTracks', confidence: 'derived' },
     height: { tol: 50, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
+    frontZ: { tol: 90, source: 'REF-drawing side view: guard edge ahead of the nose', confidence: 'estimated', note: DRAWING },
+    rearZ: { tol: 90, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING },
+    frontTriangleRun: { tol: 90, source: 'TIC-changes: triangular front sections from Jan 1943', confidence: 'estimated', note: DRAWING },
+    rearTriangleRun: { tol: 70, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING },
+  },
+  sMineDischarger: {
+    tubeDiameter: { tol: 15, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    wallThickness: { tol: 4, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    tubeHeight: { tol: 40, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    baseDiameter: { tol: 25, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    baseHeight: { tol: 15, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    inset: { tol: 50, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    stationsZ: { tol: 250, source: 'UNCERTAINTY #13: count attested, stations are not', confidence: 'estimated', note: DRAWING },
+    rearStationZ: { tol: 250, source: 'UNCERTAINTY #13', confidence: 'estimated', note: DRAWING },
   },
   chamfer: {
     structural: { tol: 3, source: 'fabrication practice', confidence: 'estimated', note: CHAMFER_NOTE },

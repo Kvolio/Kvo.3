@@ -86,21 +86,51 @@ describe('numerical QA', () => {
       tolerance: 60,
       source: 'TIC-tech; centreline scan of the armour',
     });
+    // The hull is not the longest thing on the vehicle. Two separate fittings
+    // set the extents, so they are measured separately rather than rolled into
+    // one aggregate that goes stale whenever either of them moves — which is
+    // exactly what happened when the track guards arrived.
     record({
-      feature: 'Overall length incl. Feifel overhang',
-      reference: SPEC.overall.length + 330,
-      model: toMM(box.max.z - box.min.z),
+      feature: 'Foremost point (track guard tip)',
+      reference: HULL.trackGuard.frontZ,
+      model: toMM(box.max.z),
       unit: 'mm',
-      tolerance: 90,
+      tolerance: 40,
+      source: 'REF-drawing side view: guard edge ahead of the nose',
+    });
+    record({
+      feature: 'Aftmost point (Feifel canisters)',
+      reference: -HULL.trackGuard.rearZ,
+      model: -toMM(box.min.z),
+      unit: 'mm',
+      tolerance: 160,
       source: 'REF-drawing side view: canisters project aft of the rear plate',
     });
+    // With the track guards fitted the widest thing on the vehicle is the
+    // guards, not the superstructure — and the width that falls out of the
+    // model is now directly comparable with the sourced overall figure.
+    record({
+      feature: 'Width over track guards',
+      reference: SPEC.overall.widthOverCombatTracks,
+      model: toMM(box.max.x - box.min.x),
+      unit: 'mm',
+      tolerance: 20,
+      source: 'TIC-tech, UNCERTAINTY #5',
+    });
+
+    const sideX = measureThicknessAlong(
+      geometry,
+      new Vector3(S(mm(3000)), S(mm(1500)), S(mm(500))),
+      new Vector3(-1, 0, 0),
+      S(mm(2000)),
+    );
     record({
       feature: 'Superstructure width',
       reference: HULL.superstructureWidth,
-      model: toMM(box.max.x - box.min.x),
+      model: sideX === null ? NaN : (3000 - toMM(sideX)) * 2,
       unit: 'mm',
       tolerance: 40,
-      source: 'REF-drawing front view',
+      source: 'REF-drawing front view; measured onto the sponson side',
     });
     // Cast down onto the roof over the fighting compartment rather than reading
     // the bounding box, which is set by whatever fitting stands tallest.

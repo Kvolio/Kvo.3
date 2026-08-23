@@ -138,6 +138,19 @@ component positions and plausible engineering practice.
 `confidence: 'estimated'`, is tagged `reconstructed: true` in its part metadata, and the Stage 6
 Gauntlet report must list them. They are not to be presented as historically attested.
 
+## #13 — S-mine discharger stations · `OPEN` · Hull fittings
+
+Five `Minenabwurfvorrichtung "S"` per vehicle is well attested for this period, and the device
+itself is documented — a short mortar on the superstructure roof firing a bounding anti-personnel
+charge. **Where the five sat is not.** Published arrangements differ, and surviving vehicles have
+had them removed and their mounting pads plated over.
+
+Modelled as two per side plus one at the tail. Carried at `confidence: 'estimated'` with a 250 mm
+tolerance on the longitudinal stations, which is wide enough to say plainly that the positions are
+reconstructed rather than known.
+
+**Blocks:** nothing structurally. Listed so the arrangement is never presented as documented.
+
 ---
 
 ## Resolution log
