@@ -97,7 +97,7 @@ export const HULL = {
    * modelled as the two-stage motion it is rather than as a flap.
    */
   driverHatch: {
-    centreX: port(mm(560)),
+    centreX: port(mm(890)),
     centreZ: mm(1700),
     diameter: mm(600),
     thickness: mm(100),
@@ -115,7 +115,7 @@ export const HULL = {
 
   /** Radio operator's hatch, mirroring the driver's to starboard. */
   radioHatch: {
-    centreX: starboard(mm(560)),
+    centreX: starboard(mm(890)),
     centreZ: mm(1700),
     diameter: mm(600),
     thickness: mm(100),
@@ -424,9 +424,9 @@ export const HULL_META: MetaOf<typeof HULL> = {
     armInset: { tol: 15, source: 'REF-photo-1: the arm is flush, not proud', confidence: 'estimated', note: DRAWING },
   },
   driverHatch: {
-    centreX: { tol: 40, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
-    centreZ: { tol: 50, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
-    diameter: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
+    centreX: { tol: 60, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+    centreZ: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+    diameter: { tol: 30, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
     thickness: { tol: 10, source: 'matches roof-level armour practice', confidence: 'estimated', note: DRAWING },
     openAngle: { tol: 10, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     liftHeight: { tol: 40, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
@@ -437,9 +437,9 @@ export const HULL_META: MetaOf<typeof HULL> = {
     armThickness: { tol: 15, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
   },
   radioHatch: {
-    centreX: { tol: 40, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
-    centreZ: { tol: 50, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
-    diameter: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
+    centreX: { tol: 60, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+    centreZ: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+    diameter: { tol: 30, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
     thickness: { tol: 10, source: 'matches roof-level armour practice', confidence: 'estimated', note: DRAWING },
     openAngle: { tol: 10, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     liftHeight: { tol: 40, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },

@@ -4,7 +4,7 @@ import { Vector3 } from 'three';
 import { buildAssembly, buildHull } from '../../src/parts/hull/index.js';
 import { buildHatchLid, type HatchId } from '../../src/parts/hull/hatches.js';
 import { measureThicknessAlong } from '../../src/geom/analysis.js';
-import { HULL, S, mm, toMM } from '../../src/spec/index.js';
+import { HULL, S, TURRET, mm, toMM } from '../../src/spec/index.js';
 import { ARMOUR } from '../../src/spec/armour.js';
 
 /**
@@ -76,6 +76,27 @@ describe('crew hatch lids', () => {
       });
     });
   }
+
+  it('keeps each lid clear of the turret ring and the sponson side', () => {
+    // Moving the hatches outboard to match the plan view is exactly the kind of
+    // change that quietly overlaps something else.
+    const flange = HULL.hatchSeat.flange;
+    for (const id of ['driverHatch', 'radioHatch'] as const) {
+      const spec = HULL[id];
+      const reach = spec.diameter / 2 + flange;
+
+      const toRing = Math.hypot(spec.centreX, spec.centreZ - TURRET.ring.centreZ);
+      expect(
+        toRing,
+        `${id} overlaps the turret ring`,
+      ).toBeGreaterThan(TURRET.ring.clearOpeningDiameter / 2 + reach);
+
+      expect(
+        Math.abs(spec.centreX) + reach,
+        `${id} overhangs the sponson side`,
+      ).toBeLessThan(HULL.superstructureWidth / 2);
+    }
+  });
 
   it('puts the two lids on opposite sides of the centreline', () => {
     expect(Math.sign(HULL.driverHatch.centreX)).not.toBe(Math.sign(HULL.radioHatch.centreX));
