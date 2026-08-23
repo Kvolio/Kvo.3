@@ -257,6 +257,59 @@ const CUPOLA_ARC_SEGMENTS = 5;
 /** Reported distance from a structural edge, for the chipping shader. */
 const CUPOLA_EDGE_DIST = 25;
 
+/**
+ * Lids on the two turret hatches.
+ *
+ * Both were open holes, and the cupola in particular read as a hollow ring you
+ * could see the inside of — which no photograph of a buttoned-up Tiger shows.
+ * They are built closed, seated on their rims the way the hull lids are, and
+ * carry their hinges so the mechanism is visible even before it moves.
+ */
+function buildHatchLids(ctx: BuildContext): void {
+  const roofTop = mm(WALL_TOP_Y + ARMOUR.turret.roof.thickness);
+  const c = TURRET.cupola;
+  const cupolaTop = mm(roofTop + c.height + ARMOUR.turret.roof.thickness);
+
+  // Commander's lid, on top of the drum.
+  structuralPlate(ctx, {
+    outline: translate(
+      circle(mm(c.hatchDiameter / 2 + TURRET.lidOverlap), APERTURE_SEGMENTS),
+      c.centreX,
+      -(TURRET.ring.centreZ + c.centreZ),
+    ),
+    thickness: c.hatchThickness,
+    frame: facingUp(mm(cupolaTop + c.hatchThickness)),
+    chamfer: HULL.chamfer.structural,
+    region: Region.Exterior,
+    materials: { inner: 'interiorIvoryPaint' },
+    wear: WEAR.footTraffic,
+    edgeBandWidth: HULL.interiorEdgeBand,
+  });
+
+  // Loader's lid: the same rounded oblong as the aperture it closes, oversized
+  // so it seats on the rim rather than dropping through.
+  const l = TURRET.loaderHatch;
+  structuralPlate(ctx, {
+    outline: translate(
+      roundedRect(
+        mm(l.width + TURRET.lidOverlap * 2),
+        mm(l.length + TURRET.lidOverlap * 2),
+        l.cornerRadius,
+        HATCH_CORNER_SEGMENTS,
+      ),
+      l.centreX,
+      -(TURRET.ring.centreZ + l.centreZ),
+    ),
+    thickness: l.thickness,
+    frame: facingUp(mm(roofTop + l.thickness)),
+    chamfer: HULL.chamfer.structural,
+    region: Region.Exterior,
+    materials: { inner: 'interiorIvoryPaint' },
+    wear: WEAR.footTraffic,
+    edgeBandWidth: HULL.interiorEdgeBand,
+  });
+}
+
 export function buildTurret(ctx: BuildContext): PartResult {
   const start = ctx.render.triangleCount;
 
@@ -264,6 +317,7 @@ export function buildTurret(ctx: BuildContext): PartResult {
   buildFrontPlate(ctx);
   buildRoof(ctx);
   buildCupola(ctx);
+  buildHatchLids(ctx);
 
   return {
     name: 'turret',

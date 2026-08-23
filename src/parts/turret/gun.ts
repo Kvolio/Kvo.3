@@ -1,7 +1,7 @@
 import { Matrix4, Vector2, Vector3 } from 'three';
 import { Region, WEAR } from '../../geom/attributes.js';
 import { emitRevolve } from '../../prims/lathe.js';
-import { R, S, deg, mm, type DEG } from '../../spec/units.js';
+import { R, S, deg, mm, type DEG, type MM } from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
 import { GUN } from '../../spec/armament.js';
 import { HULL } from '../../spec/hull.js';
@@ -64,19 +64,15 @@ function emitTube(ctx: BuildContext, frame: Matrix4): void {
   // is what makes a Tiger's barrel read as a gun rather than as a pipe.
   const start = mm(-GUN.barrelLength * GUN.elevation.tubeBehindTrunnion);
   const brakeStart = mm(start + GUN.barrelLength);
-  const brakeEnd = mm(brakeStart + GUN.muzzleBrake.length);
-  const brakeR = mm(GUN.muzzleBrake.outerDiameter / 2);
 
   emitRevolve(ctx.render, {
     profile: [
       new Vector2(S(boreR), S(start)),
       new Vector2(S(breechR), S(start)),
+      // Stops at the brake's rear face. `emitMuzzleBrake` builds the brake
+      // itself, with its side apertures — drawing a solid cylinder here as well
+      // simply buried them.
       new Vector2(S(muzzleR), S(brakeStart)),
-      new Vector2(S(brakeR), S(brakeStart)),
-      new Vector2(S(brakeR), S(brakeEnd)),
-      // Open at the muzzle: the bore is a hole you can look down.
-      new Vector2(S(mm(boreR + GUN.muzzleBrake.muzzleWall)), S(brakeEnd)),
-      new Vector2(S(mm(boreR + GUN.muzzleBrake.muzzleWall)), S(brakeStart)),
       new Vector2(S(boreR), S(brakeStart)),
       new Vector2(S(boreR), S(start)),
     ],
@@ -88,29 +84,62 @@ function emitTube(ctx: BuildContext, frame: Matrix4): void {
     edgeDist: GUN_EDGE_DIST,
   });
 
-  // The brake's two baffle slots, cut as gaps in a separate ring rather than
-  // suggested by shading.
-  const slotArc = Math.PI / 3;
-  for (let i = 0; i < GUN.muzzleBrake.baffles * 2; i++) {
-    const a = (i / (GUN.muzzleBrake.baffles * 2)) * Math.PI * 2 + slotArc / 2;
+}
+
+/**
+ * The double-baffle muzzle brake.
+ *
+ * Its two side apertures are GAPS, built the way the cupola's vision slits are:
+ * the wall is emitted as the arcs that remain, and what is left over is the
+ * opening. Adding rings on the outside instead — which is what this did — gives
+ * bumps rather than baffles, and two critics independently called the result a
+ * flat paddle rather than a brake.
+ */
+function emitMuzzleBrake(ctx: BuildContext, frame: Matrix4, brakeStart: MM): void {
+  const b = GUN.muzzleBrake;
+  const outer = mm(b.outerDiameter / 2);
+  const inner = mm(GUN.bore / 2 + b.muzzleWall);
+  const start = brakeStart;
+  const end = mm(brakeStart + b.length);
+  const apertureFrom = mm(brakeStart + b.length * b.baffleStartFraction);
+  const apertureTo = mm(brakeStart + b.length * b.baffleEndFraction);
+
+  const wall = (y0: MM, y1: MM): Vector2[] => [
+    new Vector2(S(inner), S(y0)),
+    new Vector2(S(outer), S(y0)),
+    new Vector2(S(outer), S(y1)),
+    new Vector2(S(inner), S(y1)),
+    new Vector2(S(inner), S(y0)),
+  ];
+
+  const ring = (y0: MM, y1: MM, arcStart: number, arcLength: number): void => {
     emitRevolve(ctx.render, {
-      profile: [
-        new Vector2(S(mm(boreR + GUN.muzzleBrake.muzzleWall)), S(mm(brakeStart + GUN.muzzleBrake.length * GUN.muzzleBrake.baffleStartFraction))),
-        new Vector2(S(brakeR), S(mm(brakeStart + GUN.muzzleBrake.length * GUN.muzzleBrake.baffleStartFraction))),
-        new Vector2(S(brakeR), S(mm(brakeStart + GUN.muzzleBrake.length * GUN.muzzleBrake.baffleEndFraction))),
-        new Vector2(S(mm(boreR + GUN.muzzleBrake.muzzleWall)), S(mm(brakeStart + GUN.muzzleBrake.length * GUN.muzzleBrake.baffleEndFraction))),
-        new Vector2(S(mm(boreR + GUN.muzzleBrake.muzzleWall)), S(mm(brakeStart + GUN.muzzleBrake.length * GUN.muzzleBrake.baffleStartFraction))),
-      ],
-      segments: 4,
-      arcStart: a,
-      arcLength: Math.PI - slotArc,
+      profile: wall(y0, y1),
+      segments: BRAKE_SEGMENTS,
+      arcStart,
+      arcLength,
       material: 'armourPaintedExterior',
       region: Region.Exterior,
       frame: laidForward(frame),
       edgeDist: GUN_EDGE_DIST,
     });
+  };
+
+  // Full collars fore and aft of the apertures.
+  ring(start, apertureFrom, 0, Math.PI * 2);
+  ring(apertureTo, end, 0, Math.PI * 2);
+
+  // Between them, only the top and bottom webs remain: the two side openings
+  // are the arcs NOT emitted, and blast leaves through them.
+  const openArc = Math.PI * b.apertureArcFraction;
+  const webArc = Math.PI - openArc;
+  for (const centre of [Math.PI / 2, -Math.PI / 2]) {
+    ring(apertureFrom, apertureTo, centre - webArc / 2, webArc);
   }
 }
+
+/** Radial segments on the muzzle brake. */
+const BRAKE_SEGMENTS = 20;
 
 /**
  * Lay a revolve's local +Y along the gun's +Z.
@@ -266,8 +295,11 @@ function emitBreech(ctx: BuildContext, frame: Matrix4): void {
   const guardZ = mm(behind - b.ringLength - b.guardLength / 2);
   for (const sign of [-1, 1] as const) {
     for (const height of [0, b.guardHeight] as const) {
-      const railFrame = frame.clone();
-      railFrame.multiply(new Matrix4().makeRotationX(-Math.PI / 2));
+      // Laid the same way as the tube. With the rotation negated, the guard's
+      // local +Y mapped to world -Z, so the whole cage was built FORWARD of the
+      // trunnion and floated over the barrel outside the turret — which is the
+      // stray geometry two critics reported hanging in mid-air.
+      const railFrame = laidForward(frame);
       railFrame.multiply(
         new Matrix4().makeTranslation(
           S(mm((sign * b.guardWidth) / 2)),
@@ -301,6 +333,7 @@ export function buildGun(ctx: BuildContext, elevation: DEG = deg(0)): PartResult
   const frame = gunFrame(elevation);
   emitMantlet(ctx);
   emitTube(ctx, frame);
+  emitMuzzleBrake(ctx, frame, mm(-GUN.barrelLength * GUN.elevation.tubeBehindTrunnion + GUN.barrelLength));
   emitBreech(ctx, frame);
   return {
     name: 'gun',

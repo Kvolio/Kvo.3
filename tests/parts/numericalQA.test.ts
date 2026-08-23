@@ -95,13 +95,27 @@ describe('numerical QA', () => {
     // overall length becomes directly comparable with the sourced gun-forward
     // figure — a check on the trunnion position, the barrel's L/56 length and
     // the muzzle brake all at once, none of which was tuned to make it land.
+    // Muzzle to the HULL'S TAIL, which is the datum the sourced figure uses.
+    //
+    // This measured the bounding box, which runs from the muzzle to the Feifel
+    // canisters — 317 mm further aft than the hull. That slack hid a gun barrel
+    // 521 mm too short, and two critics caught by eye what this row was
+    // reporting as inside tolerance.
     record({
       feature: 'Overall length, gun forward',
       reference: SPEC.overall.lengthGunForward,
-      model: toMM(box.max.z - box.min.z),
+      model: toMM(box.max.z) - HULL.rearZ,
       unit: 'mm',
-      tolerance: 260,
-      source: 'TIC-tech; muzzle to the aftmost fitting',
+      tolerance: 120,
+      source: "TIC-tech; muzzle to the hull's tail, not to the Feifel drums",
+    });
+    record({
+      feature: 'Gun overhang past the nose',
+      reference: SPEC.overall.lengthGunForward - SPEC.overall.length,
+      model: toMM(box.max.z) - HULL.frontZ,
+      unit: 'mm',
+      tolerance: 120,
+      source: 'derived from the two sourced lengths',
     });
 
     // The guard tip on its own, probed just inboard of the triangular sweep

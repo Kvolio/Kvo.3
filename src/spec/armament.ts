@@ -33,6 +33,8 @@ export const GUN = {
     /** Where each baffle slot starts and ends along the brake. */
     baffleStartFraction: 0.25,
     baffleEndFraction: 0.55,
+    /** How much of each side is open, as a fraction of a half-turn. */
+    apertureArcFraction: 0.62,
   },
 
   elevation: {
@@ -50,11 +52,17 @@ export const GUN = {
     /**
      * How much of the barrel's length sits BEHIND the trunnion.
      *
-     * The trunnion is not at the breech: the gun is balanced about it, so a
-     * fifth of the tube is behind and the recoil gear and breech block are
-     * behind that again.
+     * DERIVED against the sourced overall length, not guessed. At 0.18 the
+     * muzzle landed 521 mm short and the gun overhung the nose by 1,613 mm
+     * where a Tiger's overhangs by 2,134 — two independent critics called the
+     * barrel roughly a third too short before the arithmetic was checked.
+     *
+     * With the trunnion 265 mm forward of the hull's centre and a 465 mm brake,
+     * putting the muzzle 8,450 mm ahead of the hull's tail requires 0.074 of
+     * the tube behind the trunnion. That also places the breech face near the
+     * turret's centre, which is where the cutaway shows it.
      */
-    tubeBehindTrunnion: 0.18,
+    tubeBehindTrunnion: 0.074,
   },
 
   /**
@@ -149,6 +157,7 @@ export const GUN_META: MetaOf<typeof GUN> = {
     outerDiameter: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
     muzzleWall: { tol: 6, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
     baffleStartFraction: { tol: 0.08, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    apertureArcFraction: { tol: 0.12, source: 'REF-photo-2: the brake is mostly open at the sides', confidence: 'estimated', note: DRAWING_ESTIMATE },
     baffleEndFraction: { tol: 0.08, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
     baffles: { tol: 0, source: 'REF-photo-1', confidence: 'secondary' },
   },

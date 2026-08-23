@@ -124,7 +124,33 @@ function buildSmokeDischargers(ctx: BuildContext): void {
         frame,
         edgeDist: FITTING_EDGE_DIST,
       });
+
     }
+
+    // The bracket that holds the cluster there, once per side.
+    //
+    // Without it the tubes stand 60 mm off the turret attached to nothing, and
+    // in an orthographic view they read as loose geometry floating beside the
+    // tank — which is exactly what two critics reported, independently.
+    const bracketFrame = facingOutboard(side, halfWidth);
+    bracketFrame.setPosition(
+      S(mm(sign * halfWidth)),
+      S(centreY),
+      S(mm(TURRET.ring.centreZ + d.clusterZ)),
+    );
+    structuralPlate(ctx, {
+      outline: rect(mm(d.spacing * d.perSide), d.bracketWidth),
+      thickness: d.standoff,
+      frame: bracketFrame,
+      chamfer: HULL.chamfer.side,
+      region: Region.Exterior,
+      materials: {
+        inner: 'machinedSteel',
+        outer: 'machinedSteel',
+        edge: 'machinedSteel',
+      },
+      edgeBandWidth: d.bracketEdgeBand,
+    });
   }
 }
 

@@ -11,6 +11,9 @@ import { ARMOUR } from './armour.js';
  * per side, 25 mm roof, and the 158-ball turret ring bearing.
  */
 export const TURRET = {
+  /** How far a hatch lid overlaps the rim it seats on. */
+  lidOverlap: mm(45),
+
   ring: {
     /** Outer diameter of the bearing assembly. Constant across all Tiger I turrets. */
     bearingOuterDiameter: mm(2100),
@@ -207,6 +210,10 @@ export const TURRET = {
     clusterZ: mm(420),
     /** How far the bracket holds the cluster off the turret side. */
     standoff: mm(60),
+    /** The bracket plate that carries the cluster off the turret side. */
+    bracketWidth: mm(210),
+    /** Edge band on the bracket, for the chipping shader. */
+    bracketEdgeBand: mm(20),
   },
 
   /** Turret rear stowage bin, the so-called Rommelkiste. Added January 1943. */
@@ -293,6 +300,7 @@ const DRAWING_ESTIMATE =
 const PHOTO_ESTIMATE = 'Proportioned from REF-photo-1 and REF-photo-3 against known dimensions.';
 
 export const TURRET_META: MetaOf<typeof TURRET> = {
+  lidOverlap: { tol: 15, source: 'seating practice for a dropped-in lid', confidence: 'estimated', note: DRAWING_ESTIMATE },
   ring: {
     bearingOuterDiameter: { tol: 5, source: 'T1I-ring', confidence: 'secondary' },
     ballCircleDiameter: { tol: 5, source: 'T1I-ring', confidence: 'secondary' },
@@ -380,6 +388,8 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     tubeLength: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
     elevation: { tol: 10, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
     wallThickness: { tol: 3, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    bracketEdgeBand: { tol: 8, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    bracketWidth: { tol: 50, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
     standoff: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
     clusterZ: { tol: 120, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
     spacing: { tol: 15, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },

@@ -139,7 +139,12 @@ export const FEIFEL = {
   /** Cyclone tubes per canister. The March 1943 oval type has 14. */
   cycloneTubes: 18,
   mountingBoltsPerCanister: 4,
-  trunkDiameter: mm(150),
+  /**
+   * Slimmer than it was. At 150 mm the trunking read as two grossly oversized
+   * hoses arcing over the engine deck like a roll bar; on the vehicle it is
+   * slim piping that hugs the deck.
+   */
+  trunkDiameter: mm(105),
   /** Lateral offset of each canister from the vehicle centreline, on the rear plate. */
   centreX: mm(1080),
   /** Height of the canister's base above the ground. */
@@ -158,7 +163,8 @@ export const FEIFEL = {
   /** How far forward of the canister axis that bolt circle sits. */
   boltPlaneOffset: mm(166),
   /** Height the trunk runs above the engine deck on its way forward. */
-  trunkRise: mm(130),
+  /** Low: the trunking follows the deck rather than arching over it. */
+  trunkRise: mm(85),
   /**
    * Forward run of the bend that lifts the trunk from the canister's outlet to
    * its resting height on the deck. A shape parameter for that bend, kept
