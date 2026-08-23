@@ -36,17 +36,28 @@ row. The TIC technical page is treated as an error.
 at the running gear and the track's wheel-contact envelope. High visual impact — worth a primary
 source before Gauntlet B closes.
 
-## #2 — Turret ring clear opening diameter · `OPEN` · Turret, Interior
+## #2 — Turret ring clear opening diameter · `ADOPTED` · Turret, Interior
 
 `tiger1.info` gives the bearing outer diameter as 2,100 mm and the ball circle as 1,990 mm (1,995 mm
 mid/late), but does not give the clear opening cut in the hull roof. The figure 1,830 mm is widely
 repeated in secondary literature without attribution.
 
+**Adopted: 1,830 mm, as a reconstruction, with the reasoning stated.** It is not sourced and is not
+presented as sourced. What can be said for it is that it sits coherently between the two figures
+that *are* sourced: the clear opening must be cut inside the race, so it is necessarily smaller than
+the 1,990 mm ball circle, and 1,830 mm leaves 80 mm of race radially inboard of the balls — a
+sensible section for a bearing carrying eleven tonnes of turret. A figure much larger would leave no
+race; one much smaller would not pass a crewman.
+
+`tests/spec/turretFit.test.ts` asserts the ordering — clear opening < ball circle < bearing outer
+diameter — so the three cannot drift into an impossible arrangement.
+
 **Why it matters:** the clear opening sets the turret basket diameter, which sets the crew station
 spacing, which sets essentially the whole fighting-compartment layout. Building the interior on an
-unverified number risks a cascade.
+unverified number risks a cascade, so this entry stays open in spirit: **if a drawing turns up, the
+interior is rebuilt, not patched.**
 
-**Blocks:** Stage 2 (Turret) and Stage 6 (Interior) Gauntlets.
+**No longer blocks** Stage 2 (Turret). Still flagged for Stage 6 (Interior).
 
 ## #3 — Gun elevation and depression limits · `OPEN` · Gun
 
@@ -151,6 +162,21 @@ reconstructed rather than known.
 
 **Blocks:** nothing structurally. Listed so the arrangement is never presented as documented.
 
+## #14 — Turret shell external dimensions · `ADOPTED` · Turret
+
+The shell was carried at 2,680 mm long and **1,860 mm wide**. The width is impossible: it is
+narrower than the 2,100 mm ring bearing the turret sits on, and a turret cannot be narrower than its
+own race. Nothing caught it because both numbers were individually plausible and nothing compared
+them.
+
+Measured off the 1:50 plan view by scanning the turret outline column by column and scaling on the
+superstructure width: **about 2,170 mm wide and 2,290 mm long**, good to roughly 150 mm at that
+resolution. Both adopted at that figure with 150 mm tolerances.
+
+The measurement puts the side walls only about 35 mm outboard of the bearing's outer edge, which is
+tight. Either the walls really are nearly flush with the race, or the true width is a little greater
+than measured. The tolerance spans both readings.
+
 ---
 
 ## Resolution log
@@ -164,3 +190,6 @@ reconstructed rather than known.
 | Stage 1 | — | Hull armour promoted from reconstructed to sourced against Jentz & Doyle: nose 100 mm @ 25 deg, driver plate 100 mm, upper glacis 60 mm @ 80 deg, superstructure side 80 mm, lower side 60 mm, rear 80 mm @ 9 deg, roof and floor 25 mm. Corroborated by the SHAEF armour-arrangement diagram of October 1944 |
 | Stage 1 | — | Turret side and rear promoted to sourced at 80 mm on two concurring sources |
 | Stage 1 | — | Lower side walls established as standing 5 mm proud of the belly plate |
+| Stage 1 | #13 | Registered: S-mine discharger count attested at five, stations not |
+| Stage 2 | #2 | Adopted 1,830 mm as declared reconstruction; ordering against the two sourced ring figures asserted in tests |
+| Stage 2 | #14 | Registered and adopted: turret shell was narrower than its own ring bearing; corrected from the plan view |

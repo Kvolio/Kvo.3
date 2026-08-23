@@ -34,14 +34,24 @@ export const TURRET = {
   },
 
   shell: {
-    /** Overall external length of the turret, front plate to rear plate. */
-    length: mm(2680),
-    /** External width across the turret sides. */
-    width: mm(1860),
+    /**
+     * Overall external length of the turret, front plate to rear plate.
+     * Measured off the 1:50 plan view.
+     */
+    length: mm(2290),
+    /**
+     * External width across the turret sides.
+     *
+     * This was 1,860 mm, which is NARROWER THAN THE RING BEARING THE TURRET
+     * SITS ON — the bearing's outer diameter is a sourced 2,100 mm. A turret
+     * cannot be narrower than its own race. Measured off the plan view at
+     * about 2,170 mm, which puts the side walls a plausible few centimetres
+     * outboard of the bearing. `tests/spec/turretFit.test.ts` now asserts the
+     * relationship so it cannot come back.
+     */
+    width: mm(2170),
     /** Height from the ring plane to the underside of the roof plate. */
     interiorHeight: mm(830),
-    /** Radius of the horseshoe curve at the turret rear. */
-    rearRadius: mm(930),
     /** Front plate width, between the side plate inner faces. */
     frontPlateWidth: mm(1700),
   },
@@ -118,6 +128,12 @@ export const TURRET = {
   },
 } as const;
 
+const MEASURED_PLAN =
+  'REF-drawing plan view, measured: the turret outline scanned column by column ' +
+  'and scaled on the superstructure width, which the plan draws as a pair of ' +
+  'straight lines. Good to about 150 mm at this resolution, which is why the ' +
+  'tolerances are wide and why the ring-bearing constraint is asserted separately.';
+
 const DRAWING_ESTIMATE =
   'Scaled from REF-drawing against the 6316 mm hull length. Not a dimensioned figure.';
 const PHOTO_ESTIMATE = 'Proportioned from REF-photo-1 and REF-photo-3 against known dimensions.';
@@ -140,15 +156,14 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     centreZ: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   shell: {
-    length: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
-    width: { tol: 30, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    length: { tol: 150, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    width: { tol: 150, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     interiorHeight: {
       tol: 30,
       source: 'derived from heightToCupola less cupola height and roof thickness',
       confidence: 'estimated',
       note: DRAWING_ESTIMATE,
     },
-    rearRadius: { tol: 40, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING_ESTIMATE },
     frontPlateWidth: { tol: 30, source: 'REF-drawing front view', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   cupola: {
