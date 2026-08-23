@@ -67,6 +67,8 @@ const QUARTER_VIEWS = [
 
 const DETAIL_VIEWS = [
   { id: 'detail-front-step', eye: [-2600, 1250, 4600], target: [0, 1050, 3000] },
+  { id: 'detail-hatches-open', eye: [-2400, 3000, 3600], target: [0, 1800, 1700], hatches: true },
+  { id: 'detail-hatches-shut', eye: [-2400, 3000, 3600], target: [0, 1800, 1700] },
   { id: 'detail-hull-side', eye: [-3200, 1200, 1000], target: [-1850, 1000, 600] },
   { id: 'detail-rear', eye: [-2200, 1900, -5200], target: [-1080, 1400, -3158] },
 ];
@@ -131,6 +133,12 @@ for (const view of [...QUARTER_VIEWS, ...DETAIL_VIEWS]) {
   await page.evaluate((v) => {
     window.__TIGER__.teleport(v.eye[0] / 1000, v.eye[1] / 1000, v.eye[2] / 1000);
     window.__TIGER__.lookAt(v.target[0] / 1000, v.target[1] / 1000, v.target[2] / 1000);
+    // Moving parts are posed explicitly, and settled rather than animated, so
+    // a capture never catches a lid halfway.
+    for (const a of window.__TIGER__.internals.articulations) {
+      a.setOpen(v.hatches === true);
+      a.settle();
+    }
   }, view);
   await page.waitForTimeout(900);
   await page.screenshot({ path: join(OUT, `${view.id}.png`) });

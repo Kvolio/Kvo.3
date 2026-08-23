@@ -23,4 +23,5 @@ All lengths in millimetres.
 | Nose plate rake from vertical | 25 | 25 | -0 | -0.0% | ±1.5 | ok | Jentz & Doyle; measured off the built face |
 | Driver's plate rake from vertical | 9 | 9 | -0 | -0.0% | ±1.5 | ok | Jentz & Doyle; measured off the built face |
 | Included angle at the front step | 146 | 146 | +0 | +0.0% | ±2 | ok | A continuous wedge would read 180 degrees here |
+| Roof plate front edge | 2524 | 2530 | +6 | +0.3% | ±30 | ok | derived from the driver plate; measured off the built roof |
 | Roof front edge, behind nose top | 670 | 634 | -36 | -5.3% | ±130 | ok | REF-drawing, measured at 20.3 mm/px |

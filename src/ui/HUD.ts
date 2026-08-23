@@ -70,7 +70,8 @@ export class HUD {
     this.crosshairEl.style.opacity = visible ? '1' : '0';
   }
 
-  update(dt: number, moving: boolean): void {
+  update(dt: number, moving: boolean, prompt: string | null = null): void {
+    this.setPrompt(prompt);
     if (this.toastTimer > 0) {
       this.toastTimer -= dt;
       if (this.toastTimer <= 0) this.toastEl.classList.remove('visible');

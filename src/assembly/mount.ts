@@ -1,4 +1,5 @@
 import { InstancedMesh, Mesh, type Material, type Object3D, type Scene } from 'three';
+import type { DynamicHandle } from '../collision/CollisionWorld.js';
 import type { MaterialLibrary } from '../materials/MaterialLibrary.js';
 import { CollisionFlags, type CollisionWorld } from '../collision/CollisionWorld.js';
 import type { BuiltAssembly } from '../parts/hull/index.js';
@@ -74,4 +75,47 @@ export function mountAssembly(
     triangleCount: geometry.getIndex()!.count / 3,
     collisionTriangleCount: collisionGeometry.getIndex()!.count / 3,
   };
+}
+
+
+export interface MountedDynamic {
+  readonly mesh: Mesh;
+  readonly collision: DynamicHandle;
+  readonly triangleCount: number;
+}
+
+/**
+ * Mount an assembly that moves.
+ *
+ * The difference from `mountAssembly` is only which collision call is used:
+ * a dynamic body keeps its BVH in local space and is queried through an
+ * inverse transform, so the part can be moved every frame without a rebuild.
+ * The render mesh and the collision body are still built from the same
+ * outlines, and are still mounted in one place, for the same reason.
+ */
+export function mountDynamicAssembly(
+  scene: Scene,
+  world: CollisionWorld,
+  materials: MaterialLibrary,
+  built: BuiltAssembly,
+  opts: MountOptions = {},
+): MountedDynamic {
+  const name = opts.name ?? built.part.name;
+
+  const { geometry, materials: materialIds } = built.context.render.toGeometry();
+  const resolved: Material[] = materials.resolve(materialIds);
+  const mesh = new Mesh(geometry, resolved.length === 1 ? resolved[0]! : resolved);
+  mesh.name = name;
+  mesh.castShadow = opts.castShadow ?? true;
+  mesh.receiveShadow = opts.receiveShadow ?? true;
+  scene.add(mesh);
+
+  const { geometry: collisionGeometry } = built.context.collision.toGeometry();
+  const collision = world.addDynamic(collisionGeometry, {
+    id: name,
+    flags: opts.collisionFlags ?? CollisionFlags.Walkable | CollisionFlags.MantleTarget,
+    region: opts.region ?? Region.Exterior,
+  });
+
+  return { mesh, collision, triangleCount: geometry.getIndex()!.count / 3 };
 }

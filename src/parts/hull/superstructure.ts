@@ -168,9 +168,21 @@ export function buildSuperstructure(ctx: BuildContext): PartResult {
   const roofLength = mm(roofFrontZ - roofRearZ);
   const roofCentreZ = mm((roofFrontZ + roofRearZ) / 2);
 
-  const roofLocal = (worldZ: MM): number => -(worldZ - roofCentreZ);
+  // Local Y runs aft-negative, so world z is -localY and the outline has to be
+  // moved onto the hull the way the belly's is. Leaving it centred on the plate
+  // frame's own origin put the roof — and, consistently, every aperture in it —
+  // 317 mm too far forward: a third of a metre of roof overhanging the driver's
+  // plate into thin air, and the same gap left open at the tail. Because the
+  // holes were displaced with the plate they still lined up with each other,
+  // which is why it looked right and why only measuring the built geometry
+  // against the spec's own front and rear found it.
+  const roofLocal = (worldZ: MM): number => -worldZ;
 
-  const roofOutline: Poly2 = rect(HULL.superstructureWidth, roofLength);
+  const roofOutline: Poly2 = translate(
+    rect(HULL.superstructureWidth, roofLength),
+    0,
+    -roofCentreZ,
+  );
   const turretAperture: Poly2 = translate(
     circle(TURRET.ring.clearOpeningDiameter / 2, TURRET_RING_SEGMENTS),
     0,

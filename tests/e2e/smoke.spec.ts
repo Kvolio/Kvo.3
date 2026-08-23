@@ -128,7 +128,7 @@ test('the scene is actually lit', async ({ page }) => {
   await page.waitForTimeout(900);
 
   const samples = await page.evaluate(() => {
-    const internals = window.__TIGER__!.internals as {
+    const internals = window.__TIGER__!.internals as unknown as {
       engine: {
         renderer: { render: (s: unknown, c: unknown) => void; getContext: () => WebGL2RenderingContext };
         scene: unknown;

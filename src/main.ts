@@ -24,10 +24,13 @@ import { MobileControls } from './ui/MobileControls.js';
 import { DebugOverlay, debugEnabled } from './debug/Overlay.js';
 import { registerAttributeFactory } from './geom/attributes.js';
 import { buildAssembly, buildHull } from './parts/hull/index.js';
-import { mountAssembly } from './assembly/mount.js';
+import { mountAssembly, mountDynamicAssembly } from './assembly/mount.js';
+import { Articulation } from './assembly/Articulation.js';
+import { InteractionSystem } from './assembly/InteractionSystem.js';
+import { buildHatchLid, type HatchId } from './parts/hull/hatches.js';
 import { SPEC } from './spec/index.js';
 import { AusfH_Feb1943 } from './spec/variants.js';
-import { S, mm } from './spec/units.js';
+import { R, S, mm } from './spec/units.js';
 
 /**
  * Entry point.
@@ -101,6 +104,68 @@ const mountedHull = mountAssembly(engine.scene, world, materials, hull, {
   receiveShadow: environment.shadowsEnabled,
 });
 
+// ---------------------------------------------------------------------------
+// Hatch lids
+//
+// Built and mounted separately from the hull because they move. The roof
+// apertures they seat in are genuine holes cut in the roof plate's outline, so
+// an open hatch is a hole the player can drop through with nothing special-cased
+// to make it so.
+// ---------------------------------------------------------------------------
+/**
+ * Seconds for a lid to travel. The mechanism screws the lid up a threaded post
+ * before it swings, and no crew did that quickly.
+ */
+const HATCH_CYCLE_SECONDS = 2.2;
+/** How close the player must stand to work a hatch, in metres. */
+const HATCH_REACH = 2.4;
+
+const interactions = new InteractionSystem();
+const articulations: Articulation[] = [];
+
+const HATCH_LABELS: Record<HatchId, string> = {
+  driverHatch: "driver's hatch",
+  radioHatch: "radio operator's hatch",
+};
+
+for (const id of ['driverHatch', 'radioHatch'] as const) {
+  let pivot: readonly [number, number, number] = [0, 0, 0];
+  const built = buildAssembly((ctx) => {
+    const lid = buildHatchLid(ctx, id);
+    pivot = lid.pivot;
+    return lid.part;
+  }, { variant: AusfH_Feb1943, detail: 0 });
+
+  const mounted = mountDynamicAssembly(engine.scene, world, materials, built, {
+    name: id,
+    castShadow: environment.shadowsEnabled,
+    receiveShadow: environment.shadowsEnabled,
+  });
+
+  const spec = SPEC.hull[id];
+  const articulation = new Articulation({
+    id,
+    mesh: mounted.mesh,
+    collision: mounted.collision,
+    pivot: new Vector3(S(mm(pivot[0])), S(mm(pivot[1])), S(mm(pivot[2]))),
+    // Swinging about +Y takes the port lid outboard and the starboard lid
+    // inboard, so the sign follows the side the lid is on.
+    axis: new Vector3(0, Math.sign(spec.centreX), 0),
+    lift: S(spec.liftHeight),
+    swing: R(spec.openAngle),
+    duration: HATCH_CYCLE_SECONDS,
+  });
+  articulations.push(articulation);
+
+  interactions.add({
+    id,
+    position: () => new Vector3(S(spec.centreX), S(SPEC.hull.roofY), S(spec.centreZ)),
+    label: () => `${articulation.isOpen ? 'Close' : 'Open'} the ${HATCH_LABELS[id]}`,
+    reach: HATCH_REACH,
+    activate: () => articulation.toggle(),
+  });
+}
+
 const envelope = new BoxGeometry(
   S(SPEC.overall.widthOverCombatTracks),
   S(SPEC.overall.heightToCupola),
@@ -143,11 +208,13 @@ const loop = new Loop({
   fixedUpdate: (dt) => {
     const state = input.update(dt);
     player.update(state, dt, world);
+    for (const articulation of articulations) articulation.update(dt);
+    interactions.update(player.eyePosition, player.lookDirection, state);
   },
   render: (dt) => {
     rig.update(engine.camera, player, dt);
     const moving = Math.hypot(player.state.velocity.x, player.state.velocity.z) > 0.3;
-    hud.update(dt, moving);
+    hud.update(dt, moving, interactions.focus?.interactable.label() ?? null);
     mobile.update();
     engine.render();
     overlay?.update(dt, { engine, loop, player, world });
@@ -166,9 +233,12 @@ setTimeout(() => hud.setPrompt(null), 5000);
 // Exposed for the Playwright harness: deterministic poses, quality overrides
 // and renderer statistics, so the visual suite drives the real application
 // rather than a test-only copy of it.
+// `TigerHarness` is declared in tests/e2e/global.d.ts, which is the one place
+// its shape lives. Re-declaring it here as well made the two merge, and the
+// merged index signature swallowed every named member back into `unknown`.
 declare global {
   interface Window {
-    __TIGER__?: Record<string, unknown>;
+    __TIGER__?: TigerHarness;
   }
 }
 window.__TIGER__ = {
@@ -252,7 +322,11 @@ window.__TIGER__ = {
   // Live handles for the Playwright harness and for diagnosing render faults.
   // Kept deliberately small: poses, statistics and the objects a visual test
   // legitimately needs to inspect.
-  internals: { engine, materials, environment, ground, world, player, input, touch, loop, hull },
+  interactionPrompt: () => interactions.focus?.interactable.label() ?? null,
+  internals: {
+    engine, materials, environment, ground, world, player, input, touch, loop, hull,
+    articulations, interactions, THREE: { Vector3 },
+  },
   hullStats: () => ({
     triangles: mountedHull.triangleCount,
     collisionTriangles: mountedHull.collisionTriangleCount,

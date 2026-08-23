@@ -63,13 +63,54 @@ export const HULL = {
   /** Engine bay bulkhead position: the firewall between fighting compartment and engine. */
   firewallZ: mm(-1180),
 
-  /** Driver's hatch centre, on the roof, port side. */
+  /**
+   * How a crew hatch lid meets the hole it sits in.
+   *
+   * Shared by both forward hatches: they are the same casting handed, and
+   * giving each its own copy of these would let the two drift apart.
+   */
+  hatchSeat: {
+    /** Gap between the lid's spigot and the aperture, so it drops in. */
+    clearance: mm(6),
+    /** How far the lid's flange overhangs the hole it rests on. */
+    flange: mm(55),
+    /**
+     * How far the closed lid stands above the roof.
+     *
+     * The rest of its hundred millimetres hangs down INSIDE the ring — a Tiger's
+     * forward hatches are thick lids seated into their apertures, showing a low
+     * step, not discs resting on the roof. The spigot depth follows from this
+     * and the lid's thickness rather than being a third number to keep in step.
+     */
+    proud: mm(35),
+    /** How far the pivot arm is let into the lid's top face. */
+    armInset: mm(25),
+  },
+
+  /**
+   * Driver's hatch, on the roof, port side.
+   *
+   * The Tiger's forward hatches do not hinge. Each lid is carried on a curved
+   * arm off a vertical pivot post beside it: the lid screws straight UP clear
+   * of its seat, then swings horizontally out of the way. That is why the lids
+   * sit flush in the roof with no hinge visible on the outside, and it is
+   * modelled as the two-stage motion it is rather than as a flap.
+   */
   driverHatch: {
     centreX: port(mm(560)),
     centreZ: mm(1700),
     diameter: mm(600),
     thickness: mm(100),
     openAngle: deg(95),
+    /** Rise before the swing starts. Must clear the seat lip. */
+    liftHeight: mm(120),
+    /** Pivot post, relative to the hatch centre. Outboard and aft of the lid. */
+    pivotOffsetX: mm(430),
+    pivotOffsetZ: mm(-150),
+    postDiameter: mm(95),
+    /** The arm from post to lid. */
+    armWidth: mm(130),
+    armThickness: mm(45),
   },
 
   /** Radio operator's hatch, mirroring the driver's to starboard. */
@@ -79,6 +120,12 @@ export const HULL = {
     diameter: mm(600),
     thickness: mm(100),
     openAngle: deg(95),
+    liftHeight: mm(120),
+    pivotOffsetX: mm(430),
+    pivotOffsetZ: mm(-150),
+    postDiameter: mm(95),
+    armWidth: mm(130),
+    armThickness: mm(45),
   },
 
   /** Driver's visor (Fahrersehklappe) in the front plate, with its sliding shutter. */
@@ -296,12 +343,24 @@ export const HULL_META: MetaOf<typeof HULL> = {
   glacisRun: { tol: 120, source: 'REF-drawing side view, measured', confidence: 'estimated', note: MEASURED },
   sponsonFloorY: { tol: 50, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
   firewallZ: { tol: 80, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING },
+  hatchSeat: {
+    clearance: { tol: 3, source: 'fitting practice for a dropped-in lid', confidence: 'estimated', note: DRAWING },
+    flange: { tol: 20, source: 'REF-photo-1: the lid rim stands proud of the roof', confidence: 'estimated', note: DRAWING },
+    proud: { tol: 15, source: 'REF-photo-1: the lid shows a low step', confidence: 'estimated', note: DRAWING },
+    armInset: { tol: 15, source: 'REF-photo-1: the arm is flush, not proud', confidence: 'estimated', note: DRAWING },
+  },
   driverHatch: {
     centreX: { tol: 40, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     centreZ: { tol: 50, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     diameter: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     thickness: { tol: 10, source: 'matches roof-level armour practice', confidence: 'estimated', note: DRAWING },
     openAngle: { tol: 10, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    liftHeight: { tol: 40, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    pivotOffsetX: { tol: 60, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    pivotOffsetZ: { tol: 60, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    postDiameter: { tol: 20, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    armWidth: { tol: 25, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    armThickness: { tol: 15, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
   },
   radioHatch: {
     centreX: { tol: 40, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
@@ -309,6 +368,12 @@ export const HULL_META: MetaOf<typeof HULL> = {
     diameter: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     thickness: { tol: 10, source: 'matches roof-level armour practice', confidence: 'estimated', note: DRAWING },
     openAngle: { tol: 10, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    liftHeight: { tol: 40, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    pivotOffsetX: { tol: 60, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    pivotOffsetZ: { tol: 60, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    postDiameter: { tol: 20, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    armWidth: { tol: 25, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
+    armThickness: { tol: 15, source: 'pivot-post mechanism, REF-photo-1', confidence: 'estimated', note: DRAWING },
   },
   driverVisor: {
     centreX: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },

@@ -239,6 +239,32 @@ describe('numerical QA', () => {
       Math.sign(noseRake),
       'the nose and the driver plate must rake in opposite directions',
     ).not.toBe(Math.sign(driverRake));
+    // Measured off the built roof, not computed from the spec. The roof plate
+    // was centred on its frame's origin rather than on the hull, putting it and
+    // every aperture in it 317 mm forward — and a spec-derived figure agreed
+    // with itself throughout.
+    // Walk in from beyond the nose and stop at the FIRST roof hit. Recording
+    // every hit instead walks the length of the tank and reports the tail.
+    const roofFrontEdgeZ = (): number => {
+      for (let z = 3400; z >= -3600; z -= 5) {
+        const hit = measureThicknessAlong(
+          geometry,
+          new Vector3(S(mm(1400)), S(mm(HULL.roofY + 500)), S(mm(z))),
+          new Vector3(0, -1, 0),
+          S(mm(3000)),
+        );
+        if (hit !== null && Math.abs(toMM(hit) - 500) < 30) return z;
+      }
+      return NaN;
+    };
+    record({
+      feature: 'Roof plate front edge',
+      reference: DRIVER_PLATE_HEAD_Z,
+      model: roofFrontEdgeZ(),
+      unit: 'mm',
+      tolerance: 30,
+      source: 'derived from the driver plate; measured off the built roof',
+    });
     record({
       feature: 'Roof front edge, behind nose top',
       reference: 670,
