@@ -24,7 +24,14 @@ const RENDER_SMOOTHING_DEGREES = 38;
 const COLLISION_SMOOTHING_DEGREES = 60;
 
 /** Assemble the hull. */
-export function buildHull(ctx: BuildContext): PartResult {
+/**
+ * Everything that does not traverse: hull, running gear and tracks.
+ *
+ * Split from the turret because the turret moves. They are mounted as separate
+ * bodies so that traversing is a matrix write rather than a rebuild, exactly as
+ * with the hatch lids.
+ */
+export function buildHullOnly(ctx: BuildContext): PartResult {
   return combineParts('hull', [
     buildLowerHull(ctx),
     buildSuperstructure(ctx),
@@ -32,10 +39,27 @@ export function buildHull(ctx: BuildContext): PartResult {
     buildFittings(ctx),
     buildRunningGear(ctx),
     buildTracks(ctx),
+  ]);
+}
+
+/** The turret and everything that turns with it, at zero traverse. */
+export function buildTurretAssembly(ctx: BuildContext): PartResult {
+  return combineParts('turret', [
     buildTurret(ctx),
     buildGun(ctx),
     buildTurretFittings(ctx),
   ]);
+}
+
+/**
+ * The whole vehicle at zero traverse, as one assembly.
+ *
+ * This is what the geometry tests measure: they care where things are relative
+ * to each other, and a turret that could be anywhere is a turret nothing can be
+ * checked against. The viewer mounts the two halves separately.
+ */
+export function buildHull(ctx: BuildContext): PartResult {
+  return combineParts('vehicle', [buildHullOnly(ctx), buildTurretAssembly(ctx)]);
 }
 
 export interface BuiltAssembly {

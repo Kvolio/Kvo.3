@@ -10,6 +10,7 @@ export {};
  */
 declare global {
   interface TigerArticulation {
+    readonly id: string;
     readonly isOpen: boolean;
     readonly isMoving: boolean;
     readonly openFraction: number;
@@ -28,6 +29,8 @@ declare global {
     [key: string]: unknown;
     step(steps: number): void;
     interactionPrompt(): string | null;
+    articulation(id: string): TigerArticulation | null;
+    interactablePosition(id: string): number[] | null;
     internals: {
       articulations: TigerArticulation[];
       player: {

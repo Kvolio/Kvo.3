@@ -59,7 +59,13 @@ function buildStowageBin(ctx: BuildContext): void {
     frame: binFrame(centreY),
     chamfer: HULL.chamfer.side,
     region: Region.Exterior,
-    materials: { inner: 'handledSteel', outer: 'handledSteel', edge: 'handledSteel' },
+    // Painted with the rest of the vehicle. `handledSteel` is a bare, rusted
+    // finish and made the bin read as a lump of scrap bolted to the turret.
+    materials: {
+      inner: 'armourPaintedExterior',
+      outer: 'armourPaintedExterior',
+      edge: 'armourPaintedExterior',
+    },
     // Everything the crew could not fit inside went in here.
     wear: WEAR.handled,
     edgeBandWidth: b.edgeBand,

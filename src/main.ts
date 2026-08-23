@@ -23,7 +23,7 @@ import { HUD } from './ui/HUD.js';
 import { MobileControls } from './ui/MobileControls.js';
 import { DebugOverlay, debugEnabled } from './debug/Overlay.js';
 import { registerAttributeFactory } from './geom/attributes.js';
-import { buildAssembly, buildHull } from './parts/hull/index.js';
+import { buildAssembly, buildHullOnly, buildTurretAssembly } from './parts/hull/index.js';
 import { mountAssembly, mountDynamicAssembly } from './assembly/mount.js';
 import { Articulation } from './assembly/Articulation.js';
 import { InteractionSystem } from './assembly/InteractionSystem.js';
@@ -97,7 +97,7 @@ world.addStatic(ground.mesh.geometry, { id: 'ground', flags: CollisionFlags.Walk
 // turret and running gear fill it out.
 // ---------------------------------------------------------------------------
 progress('hull', 0.78);
-const hull = buildAssembly(buildHull, { variant: AusfH_Feb1943, detail: 0 });
+const hull = buildAssembly(buildHullOnly, { variant: AusfH_Feb1943, detail: 0 });
 const mountedHull = mountAssembly(engine.scene, world, materials, hull, {
   name: 'hull',
   castShadow: environment.shadowsEnabled,
@@ -119,9 +119,51 @@ const mountedHull = mountAssembly(engine.scene, world, materials, hull, {
 const HATCH_CYCLE_SECONDS = 2.2;
 /** How close the player must stand to work a hatch, in metres. */
 const HATCH_REACH = 2.4;
+/** How close to stand to work the turret traverse, in metres. */
+const TURRET_REACH = 3.2;
 
 const interactions = new InteractionSystem();
 const articulations: Articulation[] = [];
+
+// ---------------------------------------------------------------------------
+// Turret
+//
+// Mounted as its own body so that traversing is a matrix write rather than a
+// rebuild, and built at zero traverse in hull coordinates so the geometry tests
+// can measure it against the deck.
+// ---------------------------------------------------------------------------
+const turretBuild = buildAssembly(buildTurretAssembly, {
+  variant: AusfH_Feb1943,
+  detail: 0,
+});
+const mountedTurret = mountDynamicAssembly(engine.scene, world, materials, turretBuild, {
+  name: 'turret',
+  castShadow: environment.shadowsEnabled,
+  receiveShadow: environment.shadowsEnabled,
+});
+
+const turret = new Articulation({
+  id: 'turret',
+  mesh: mountedTurret.mesh,
+  collision: mountedTurret.collision,
+  pivot: new Vector3(0, S(SPEC.turret.ring.planeY), S(SPEC.turret.ring.centreZ)),
+  axis: new Vector3(0, 1, 0),
+  lift: 0,
+  // A full turn takes 60 seconds in low gear, which is the figure the
+  // Boehringer-Sturm drive is specified at and slower than most people expect.
+  swing: Math.PI * 2,
+  duration: SPEC.traverse.lowGearSeconds,
+});
+articulations.push(turret);
+
+interactions.add({
+  id: 'turret',
+  position: () =>
+    new Vector3(0, S(SPEC.turret.ring.planeY), S(SPEC.turret.ring.centreZ)),
+  label: () => (turret.isOpen ? 'Stop the turret' : 'Traverse the turret'),
+  reach: TURRET_REACH,
+  activate: () => turret.toggle(),
+});
 
 const HATCH_LABELS: Record<HatchId, string> = {
   driverHatch: "driver's hatch",
@@ -323,9 +365,17 @@ window.__TIGER__ = {
   // Kept deliberately small: poses, statistics and the objects a visual test
   // legitimately needs to inspect.
   interactionPrompt: () => interactions.focus?.interactable.label() ?? null,
+  // Looked up by id, not by index: the list grew a turret at position zero and
+  // every test that said articulations[0] silently changed what it was testing.
+  articulation: (id: string) => articulations.find((a) => a.id === id) ?? null,
+  /** Where an interactable sits, in metres, so tests need not hard-code it. */
+  interactablePosition: (id: string) => {
+    const found = interactions.positionOf(id);
+    return found === null ? null : found.toArray();
+  },
   internals: {
     engine, materials, environment, ground, world, player, input, touch, loop, hull,
-    articulations, interactions, THREE: { Vector3 },
+    articulations, interactions, turret, mountedTurret, THREE: { Vector3 },
   },
   hullStats: () => ({
     triangles: mountedHull.triangleCount,

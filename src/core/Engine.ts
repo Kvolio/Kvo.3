@@ -112,6 +112,13 @@ export class Engine {
     camera.bottom = -halfHeight;
     camera.position.copy(eye);
     // Looking straight down needs an up vector that is not also straight down.
+    //
+    // For the plan view that choice fixes which way round the vehicle reads,
+    // and getting it wrong makes a correct model look mirrored. With up = -Z,
+    // the vehicle's FORWARD points to the bottom of the frame and its PORT side
+    // — the driver's, and the commander's cupola — is on the RIGHT. Screen right
+    // is forward x up = (0,-1,0) x (0,0,-1) = +X, and +X is port; see the frame
+    // note in spec/units.ts, which is the opposite of most people's first guess.
     const looksVertical = Math.abs(eye.clone().sub(target).normalize().y) > 0.99;
     camera.up.set(0, looksVertical ? 0 : 1, looksVertical ? -1 : 0);
     camera.lookAt(target);

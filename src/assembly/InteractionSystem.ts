@@ -39,6 +39,11 @@ export class InteractionSystem {
     return this.current;
   }
 
+  /** Where a registered interactable is, for tests and for debug overlays. */
+  positionOf(id: string): Vector3 | null {
+    return this.items.find((i) => i.id === id)?.position() ?? null;
+  }
+
   /**
    * Pick what the player is offered.
    *

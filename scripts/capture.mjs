@@ -141,6 +141,9 @@ for (const view of [...QUARTER_VIEWS, ...DETAIL_VIEWS]) {
     // Moving parts are posed explicitly, and settled rather than animated, so
     // a capture never catches a lid halfway.
     for (const a of window.__TIGER__.internals.articulations) {
+      // The turret is an articulation too, and posing it "open" would leave it
+      // traversed 360 degrees through every capture. It stays at zero.
+      if (a.id === 'turret') continue;
       a.setOpen(v.hatches === true);
       a.settle();
     }
