@@ -1,3 +1,4 @@
+import type { Matrix4} from 'three';
 import { Vector2, Vector3 } from 'three';
 import type { MeshBuilder, MaterialId } from '../geom/MeshBuilder.js';
 import type { Region } from '../geom/attributes.js';
@@ -27,6 +28,16 @@ export interface RevolveOptions {
   readonly wear?: number;
   /** Origin of the axis in the parent frame. */
   readonly origin?: Vector3;
+  /**
+   * Placement of the whole body in vehicle space, applied after `origin`.
+   *
+   * The revolve is always about LOCAL Y, which is right for a cupola or an
+   * exhaust stack and wrong for anything that rolls: a road wheel, a sprocket
+   * and an idler all turn about a lateral axis. Rather than teach this
+   * primitive about arbitrary axes, the body is built upright and then placed —
+   * the same bargain `emitPlate` already makes with its own frame.
+   */
+  readonly frame?: Matrix4;
   /** Millimetres from the nearest structural edge, for the chipping shader. */
   readonly edgeDist?: number;
 }
@@ -41,12 +52,23 @@ export function emitRevolve(mb: MeshBuilder, opts: RevolveOptions): { triangleCo
     region,
     wear,
     origin = new Vector3(),
+    frame,
     edgeDist = 0,
   } = opts;
 
   if (profile.length < 2 || segments < 3) return { triangleCount: 0 };
 
   const start = mb.triangleCount;
+
+  // Positions through the frame, normals through its rotation. Every vertex in
+  // this function goes through `put` so that none can be emitted unplaced.
+  const put = (position: Vector3, normal: Vector3, uv: Vector2): number => {
+    if (frame !== undefined) {
+      position.applyMatrix4(frame);
+      normal.transformDirection(frame);
+    }
+    return mb.vert(position, normal, uv);
+  };
   const fullTurn = Math.abs(arcLength - Math.PI * 2) < 1e-6;
   const ringCount = fullTurn ? segments : segments + 1;
 
@@ -85,7 +107,7 @@ export function emitRevolve(mb: MeshBuilder, opts: RevolveOptions): { triangleCo
           if (radius < 1e-9) {
             // A pole: one shared vertex rather than a fan of coincident ones.
             const nrm = new Vector3(0, Math.sign(pn.y) || 1, 0);
-            const idx = mb.vert(
+            const idx = put(
               new Vector3(origin.x, origin.y + height, origin.z),
               nrm,
               new Vector2(0.5, p / (profile.length - 1)),
@@ -97,7 +119,7 @@ export function emitRevolve(mb: MeshBuilder, opts: RevolveOptions): { triangleCo
               const cos = Math.cos(a);
               const sin = Math.sin(a);
               ring.push(
-                mb.vert(
+                put(
                   new Vector3(
                     origin.x + cos * radius,
                     origin.y + height,
@@ -124,7 +146,7 @@ export function emitRevolve(mb: MeshBuilder, opts: RevolveOptions): { triangleCo
           const pt = profile[ringIndex]!;
           if (pt.x < 1e-9) return;
           const nrm = new Vector3(0, downward ? -1 : 1, 0);
-          const hub = mb.vert(
+          const hub = put(
             new Vector3(origin.x, origin.y + pt.y, origin.z),
             nrm,
             new Vector2(0.5, 0.5),
@@ -142,7 +164,7 @@ export function emitRevolve(mb: MeshBuilder, opts: RevolveOptions): { triangleCo
         // rather than re-emitting the axis for every quad.
         if (!fullTurn && !profileClosed) {
           const axisColumn = profile.map((pt) =>
-            mb.vert(
+            put(
               new Vector3(origin.x, origin.y + pt.y, origin.z),
               new Vector3(0, 1, 0),
               new Vector2(0, 0),

@@ -172,13 +172,18 @@ describe('numerical QA', () => {
       tolerance: 12,
       source: 'TIC-tech; measured under the centreline',
     });
+    // With the running gear built, the lowest thing on the vehicle is no longer
+    // the hull — it is the road wheels, and they should be exactly on the
+    // ground. The arm droop that puts them there is derived from the bar
+    // height, the arm length and the wheel diameter; taking the arm as
+    // horizontal instead buried the bottom of every wheel 200 mm underground.
     record({
-      feature: 'Lowest point of the hull',
-      reference: SPEC.overall.groundClearance,
+      feature: 'Lowest point of the vehicle',
+      reference: 0,
       model: toMM(box.min.y),
       unit: 'mm',
-      tolerance: 30,
-      source: 'TIC-tech; includes edge breaks on the side walls',
+      tolerance: 6,
+      source: 'road wheels resting on the ground plane',
     });
 
     // Plate thicknesses, crossed along Z and corrected for each plate's rake.
@@ -308,12 +313,16 @@ describe('numerical QA', () => {
     // made by hand. A figure that is not measured does not appear.
     const line = (r: Row): string => {
       const dev = r.model - r.reference;
-      const pct = (dev / r.reference) * 100;
+      // A reference of zero — the wheels sitting on the ground — has no
+      // meaningful percentage, so the column says so rather than reporting
+      // Infinity.
+      const pct = r.reference === 0 ? null : (dev / r.reference) * 100;
       const verdict = Math.abs(dev) <= r.tolerance ? 'ok' : '**OUT**';
       const sign = (v: number): string => (v >= 0 ? '+' : '');
       return (
         `| ${r.feature} | ${r.reference.toFixed(0)} | ${r.model.toFixed(0)} | ` +
-        `${sign(dev)}${dev.toFixed(0)} | ${sign(pct)}${pct.toFixed(1)}% | ` +
+        `${sign(dev)}${dev.toFixed(0)} | ` +
+        `${pct === null ? '—' : `${sign(pct)}${pct.toFixed(1)}%`} | ` +
         `±${r.tolerance} | ${verdict} | ${r.source} |`
       );
     };

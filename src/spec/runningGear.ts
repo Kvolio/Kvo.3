@@ -1,4 +1,4 @@
-import { mm, deg, type MM } from './units.js';
+import { mm, deg, type DEG, type MM } from './units.js';
 import type { MetaOf } from './meta.js';
 import { OVERALL } from './overall.js';
 
@@ -53,6 +53,10 @@ export const SPROCKET = {
   /** Longitudinal position of the sprocket axis. Front-drive. */
   centreZ: mm(2470),
   centreY: mm(800),
+  /** Hub barrel, spanning the guide-horn channel between the two toothed rings. */
+  hubDiameter: mm(300),
+  /** Inset of a toothed ring from the track's outer edge. */
+  ringInset: mm(40),
 } as const;
 
 export const IDLER = {
@@ -61,6 +65,7 @@ export const IDLER = {
   centreY: mm(715),
   /** Track tension is set by draw bolts acting on the idler crank. */
   tensioningTravel: mm(120),
+  hubDiameter: mm(260),
 } as const;
 
 export const ROAD_WHEEL = {
@@ -69,9 +74,13 @@ export const ROAD_WHEEL = {
   width: mm(75),
   /** Solid rubber tyre thickness on the Ausf. H wheel. Steel-rimmed wheels arrive Feb 1944. */
   tyreThickness: mm(65),
+  /** How far the steel disc is set in from the tyre's outer face, each side. */
+  discInset: mm(6),
   /** Rim bolt count. Changed from 20 to 18 in February 1943 — an Ausf. H discriminator. */
   rimBolts: 18,
   hubDiameter: mm(230),
+  /** How far the hub cap stands proud of the disc's outer face. */
+  hubProud: mm(45),
 } as const;
 
 // -----------------------------------------------------------------------------
@@ -121,6 +130,13 @@ export const SUSPENSION = {
    */
   wheelPlanePitch: mm(78),
   wheelPlaneCount: 6,
+
+  /** Standoff of the swing arms' plane from the lower hull side. */
+  armStandoff: mm(40),
+  /** Width of an arm boss along the axle. */
+  armWidth: mm(110),
+  /** Radius of the boss around the torsion bar's splined end. */
+  bossRadius: mm(95),
 } as const;
 
 /** Lateral offsets, relative to the track centreline, for a given station index. */
@@ -153,6 +169,22 @@ export function armSign(side: 'left' | 'right'): 1 | -1 {
 
 /** Stations carrying a hydraulic shock absorber. Front and rear only. */
 export const SHOCK_STATIONS: readonly number[] = [0, STATIONS_PER_SIDE - 1];
+
+/**
+ * How far the swing arm hangs below horizontal at nominal ride height.
+ *
+ * DERIVED, not chosen. The torsion bar axis is 600 mm up, the arm is 300 mm
+ * long and the wheel is 800 mm across, so the arm has to droop far enough to
+ * put the axle exactly one wheel radius off the ground. Taking the arm as
+ * horizontal instead — which is the obvious thing to do and what this did at
+ * first — buries the bottom of every wheel 200 mm underground.
+ *
+ * Positive suspension deflection is compression, which reduces this droop.
+ */
+export const STATIC_ARM_DROOP: DEG = deg(
+  (Math.asin((SUSPENSION.pivotY - ROAD_WHEEL.diameter / 2) / SUSPENSION.armLength) * 180) /
+    Math.PI,
+);
 
 /** Lateral distance from the vehicle centreline to a track's centreline. */
 export const TRACK_CENTRE_X: MM = mm((OVERALL.widthOverCombatTracks - TRACK.width) / 2);
@@ -191,6 +223,7 @@ export const SPROCKET_META: MetaOf<typeof SPROCKET> = {
   rings: { tol: 0, source: 'TIC-susp', confidence: 'secondary' },
   spokes: { tol: 0, source: 'TIC-susp', confidence: 'secondary' },
   outerDiameter: { tol: 2, source: 'TIC-susp', confidence: 'secondary' },
+  ringInset: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
   pitchRadius: {
     tol: 0.5,
     source: 'derived: pitch / (2 sin(pi/teeth))',
@@ -199,6 +232,7 @@ export const SPROCKET_META: MetaOf<typeof SPROCKET> = {
   },
   centreZ: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
   centreY: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  hubDiameter: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
 
 export const IDLER_META: MetaOf<typeof IDLER> = {
@@ -206,14 +240,17 @@ export const IDLER_META: MetaOf<typeof IDLER> = {
   centreZ: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
   centreY: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
   tensioningTravel: { tol: 30, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  hubDiameter: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
 
 export const ROAD_WHEEL_META: MetaOf<typeof ROAD_WHEEL> = {
   diameter: { tol: 2, source: 'TIC-tech, TM-wheels', confidence: 'secondary' },
   width: { tol: 2, source: 'TIC-tech', confidence: 'secondary' },
+  discInset: { tol: 3, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
   tyreThickness: { tol: 10, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
   rimBolts: { tol: 0, source: 'TIC-changes (Feb 1943)', confidence: 'secondary' },
   hubDiameter: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  hubProud: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
 };
 
 export const SUSPENSION_META: MetaOf<typeof SUSPENSION> = {
@@ -233,6 +270,9 @@ export const SUSPENSION_META: MetaOf<typeof SUSPENSION> = {
   },
   pivotY: { tol: 40, source: 'REF-drawing, REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },
   armLength: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  armStandoff: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  armWidth: { tol: 25, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  bossRadius: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
   torsionBar: {
     length: { tol: 1, source: 'TIC-susp', confidence: 'secondary' },
     diameter: { tol: 1.5, source: 'TIC-susp (55-58 mm range)', confidence: 'secondary' },
