@@ -57,6 +57,29 @@ export const GUN = {
     tubeBehindTrunnion: 0.18,
   },
 
+  /**
+   * The breech end: the ring, the falling block, and the guard that keeps the
+   * recoiling mass off the crew.
+   *
+   * The recoil guard is not decoration. The gun strokes 580 mm when it fires,
+   * and the loader stands where the breech ends up; the guard is what stops
+   * that being fatal, and its presence is the reason the turret's usable floor
+   * is smaller than its ring.
+   */
+  breech: {
+    ringLength: mm(620),
+    ringDiameter: mm(420),
+    /** The falling wedge block, below the bore. */
+    blockWidth: mm(360),
+    blockHeight: mm(300),
+    blockThickness: mm(150),
+    /** Recoil guard: a cage around the breech's travel. */
+    guardLength: mm(900),
+    guardWidth: mm(700),
+    guardHeight: mm(560),
+    guardTubeDiameter: mm(45),
+  },
+
   recoil: {
     /** Normal recoil stroke. */
     stroke: mm(580),
@@ -109,6 +132,10 @@ export const TRAVERSE = {
   handwheelDegreesPerTurn: deg(1.9),
 } as const;
 
+const BREECH_SOURCE =
+  'REF-cutaway: the breech, block and recoil guard are drawn in section. ' +
+  'Blocked out to envelope rather than mechanised.';
+
 const DRAWING_ESTIMATE =
   'Scaled from REF-drawing against the 6316 mm hull length. Not a dimensioned figure.';
 
@@ -131,6 +158,27 @@ export const GUN_META: MetaOf<typeof GUN> = {
     trunnionY: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
     tubeBehindTrunnion: { tol: 0.05, source: 'REF-cutaway: gun balanced about the trunnion', confidence: 'estimated', note: DRAWING_ESTIMATE },
     trunnionZ: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  },
+  /**
+   * The breech end: the ring, the falling block, and the guard that keeps the
+   * recoiling mass off the crew.
+   *
+   * The recoil guard is not decoration. The gun strokes 580 mm when it fires,
+   * and the loader stands where the breech ends up; the guard is what stops
+   * that being fatal, and its presence is the reason the turret's usable floor
+   * is smaller than its ring.
+   */
+
+  breech: {
+    ringLength: { tol: 80, source: BREECH_SOURCE, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    ringDiameter: { tol: 50, source: BREECH_SOURCE, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    blockWidth: { tol: 50, source: BREECH_SOURCE, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    blockHeight: { tol: 50, source: BREECH_SOURCE, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    blockThickness: { tol: 30, source: BREECH_SOURCE, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    guardLength: { tol: 120, source: BREECH_SOURCE, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    guardWidth: { tol: 100, source: BREECH_SOURCE, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    guardHeight: { tol: 90, source: BREECH_SOURCE, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    guardTubeDiameter: { tol: 15, source: BREECH_SOURCE, confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   recoil: {
     stroke: { tol: 40, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING_ESTIMATE },

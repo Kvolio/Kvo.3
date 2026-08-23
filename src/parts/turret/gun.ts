@@ -160,11 +160,96 @@ function emitMantlet(ctx: BuildContext): void {
   });
 }
 
-export function buildGun(ctx: BuildContext): PartResult {
+/**
+ * The breech end: the ring, the falling block, and the recoil guard.
+ *
+ * The guard is not decoration. The gun strokes 580 mm when it fires and the
+ * loader stands exactly where the breech ends up; the guard is what makes that
+ * survivable, and it is why the turret's usable floor is smaller than its ring.
+ */
+function emitBreech(ctx: BuildContext, frame: Matrix4): void {
+  const b = GUN.breech;
+  const behind = mm(-GUN.barrelLength * GUN.elevation.tubeBehindTrunnion);
+
+  // The breech ring, on the tube's axis behind the trunnion.
+  emitRevolve(ctx.render, {
+    profile: [
+      new Vector2(S(mm(GUN.bore / 2)), S(mm(behind - b.ringLength))),
+      new Vector2(S(mm(b.ringDiameter / 2)), S(mm(behind - b.ringLength))),
+      new Vector2(S(mm(b.ringDiameter / 2)), S(behind)),
+      new Vector2(S(mm(GUN.bore / 2)), S(behind)),
+      new Vector2(S(mm(GUN.bore / 2)), S(mm(behind - b.ringLength))),
+    ],
+    segments: TUBE_SEGMENTS,
+    material: 'machinedSteel',
+    region: Region.TurretInterior,
+    frame: laidForward(frame),
+    edgeDist: GUN_EDGE_DIST,
+  });
+
+  // The falling wedge block, hanging below the bore.
+  const blockFrame = frame.clone();
+  blockFrame.multiply(
+    new Matrix4().makeTranslation(
+      0,
+      -S(mm(b.blockHeight / 2)),
+      S(mm(behind - b.ringLength / 2)),
+    ),
+  );
+  structuralPlate(ctx, {
+    outline: rect(b.blockWidth, b.blockHeight),
+    thickness: b.blockThickness,
+    frame: blockFrame,
+    chamfer: HULL.chamfer.side,
+    region: Region.TurretInterior,
+    materials: {
+      inner: 'machinedSteel',
+      outer: 'machinedSteel',
+      edge: 'machinedSteel',
+    },
+    edgeBandWidth: HULL.interiorEdgeBand,
+  });
+
+  // The recoil guard: a cage of tube around the breech's travel.
+  const guardZ = mm(behind - b.ringLength - b.guardLength / 2);
+  for (const sign of [-1, 1] as const) {
+    for (const height of [0, b.guardHeight] as const) {
+      const railFrame = frame.clone();
+      railFrame.multiply(new Matrix4().makeRotationX(-Math.PI / 2));
+      railFrame.multiply(
+        new Matrix4().makeTranslation(
+          S(mm((sign * b.guardWidth) / 2)),
+          0,
+          -S(mm(b.guardHeight / 2 - height)),
+        ),
+      );
+      emitRevolve(ctx.render, {
+        profile: [
+          new Vector2(0, S(mm(guardZ - b.guardLength / 2))),
+          new Vector2(S(mm(b.guardTubeDiameter / 2)), S(mm(guardZ - b.guardLength / 2))),
+          new Vector2(S(mm(b.guardTubeDiameter / 2)), S(mm(guardZ + b.guardLength / 2))),
+          new Vector2(0, S(mm(guardZ + b.guardLength / 2))),
+        ],
+        segments: GUARD_SEGMENTS,
+        material: 'handledSteel',
+        region: Region.TurretInterior,
+        frame: railFrame,
+        wear: WEAR.handled,
+        edgeDist: GUN_EDGE_DIST,
+      });
+    }
+  }
+}
+
+/** Radial segments on a recoil guard rail. */
+const GUARD_SEGMENTS = 10;
+
+export function buildGun(ctx: BuildContext, elevation: DEG = deg(0)): PartResult {
   const start = ctx.render.triangleCount;
-  const frame = gunFrame();
+  const frame = gunFrame(elevation);
   emitMantlet(ctx);
   emitTube(ctx, frame);
+  emitBreech(ctx, frame);
   return {
     name: 'gun',
     triangleCount: ctx.render.triangleCount - start,
