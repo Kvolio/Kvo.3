@@ -30,6 +30,12 @@ const geometry = buildAssembly(buildHull).context.render.toGeometry().geometry;
 /** How far a ray may travel before it is considered to have left the vehicle. */
 const ESCAPE_DISTANCE = mm(1500);
 
+/** How far beside an aperture's rim to probe for solid armour. */
+const BESIDE_OFFSET = 40;
+
+/** How far outside a surface a probe starts, so it is unambiguously outside. */
+const STANDOFF = 200;
+
 const eyeOf = (d: VisionDevice): Vector3 =>
   new Vector3(S(d.eye[0]), S(d.eye[1]), S(d.eye[2]));
 
@@ -73,9 +79,31 @@ function openingFromAngle(device: VisionDevice, windowDegrees: number): number {
   return 2 * distance * Math.tan((windowDegrees / 2 / 180) * Math.PI);
 }
 
+/**
+ * A device's own axes.
+ *
+ * These were world up and world X, which is right for anything looking straight
+ * ahead and wrong for everything else. The commander's five vision slits look
+ * outward on five different bearings, so sweeping them about world X measured a
+ * slit's height along an axis that was not its height — and reported the drum's
+ * whole diameter as one opening.
+ *
+ * `lateral` is the device's own right vector: the axis you rotate about to
+ * sweep VERTICALLY, since rotating about a horizontal axis moves the ray up and
+ * down.
+ */
+function axesOf(device: VisionDevice): { up: Vector3; lateral: Vector3 } {
+  const view = new Vector3(...device.viewDirection).normalize();
+  const worldUp = new Vector3(0, 1, 0);
+  const lateral = new Vector3().crossVectors(worldUp, view);
+  // A device looking straight up or down has no meaningful lateral from this
+  // construction; none does today, and this makes that assumption explicit.
+  if (lateral.lengthSq() < 1e-6) throw new Error(`${device.id} looks along the vertical`);
+  return { up: worldUp, lateral: lateral.normalize() };
+}
+
 describe.each(VISION_DEVICES)('vision device: $label', (device) => {
-  const up = new Vector3(0, 1, 0);
-  const lateral = new Vector3(1, 0, 0);
+  const { up, lateral } = axesOf(device);
 
   it('can be seen through at all', () => {
     // The single most important assertion here. A port modelled as a recess
@@ -134,12 +162,17 @@ describe.each(VISION_DEVICES)('vision device: $label', (device) => {
     // Measured from well clear of the surface and in two hops — first hit is
     // the outer face, second is the inner — because a ray starting exactly on a
     // face is at the mercy of which side of it floating point lands on.
+    // Offset along the device's OWN lateral, and probed along its own view
+    // direction reversed, so this works for a slit facing any bearing.
+    const view = new Vector3(...device.viewDirection).normalize();
     const beside = new Vector3(
-      S(device.apertureCentre[0]) + S(mm(device.clearWidth / 2 + 40)),
+      S(device.apertureCentre[0]),
       S(device.apertureCentre[1]),
-      S(device.apertureCentre[2]) + S(mm(200)),
-    );
-    const aft = new Vector3(0, 0, -1);
+      S(device.apertureCentre[2]),
+    )
+      .addScaledVector(lateral, S(mm(device.clearWidth / 2 + BESIDE_OFFSET)))
+      .addScaledVector(view, S(mm(STANDOFF)));
+    const aft = view.clone().negate();
 
     const toOuterFace = measureThicknessAlong(geometry, beside, aft, S(mm(600)));
     expect(toOuterFace, 'no armour beside the aperture').not.toBeNull();

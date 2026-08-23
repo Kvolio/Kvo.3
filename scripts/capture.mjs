@@ -71,6 +71,8 @@ const DETAIL_VIEWS = [
   { id: 'detail-hatches-shut', eye: [-2400, 3000, 3600], target: [0, 1800, 1700] },
   { id: 'detail-hull-side', eye: [-3200, 1200, 1000], target: [-1850, 1000, 600] },
   { id: 'detail-rear', eye: [-2200, 1900, -5200], target: [-1080, 1400, -3158] },
+  { id: 'detail-cupola', eye: [2600, 3100, 1400], target: [500, 2500, -985] },
+  { id: 'detail-turret-rear', eye: [-1400, 3000, -4200], target: [0, 2200, -1455] },
 ];
 
 mkdirSync(OUT, { recursive: true });

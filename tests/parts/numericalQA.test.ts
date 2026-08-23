@@ -9,6 +9,7 @@ import {
   DRIVER_PLATE_HEAD_Z,
   HULL,
   SPEC,
+  TURRET,
 } from '../../src/spec/index.js';
 
 /**
@@ -134,9 +135,11 @@ describe('numerical QA', () => {
     });
     // Cast down onto the roof over the fighting compartment rather than reading
     // the bounding box, which is set by whatever fitting stands tallest.
+    // Forward of the turret and outboard of the driver's hatch, or this reads
+    // whatever is stacked above the roof rather than the roof.
     const roofHit = measureThicknessAlong(
       geometry,
-      new Vector3(S(mm(900)), S(mm(4000)), S(mm(500))),
+      new Vector3(S(mm(1400)), S(mm(4000)), S(mm(2000))),
       new Vector3(0, -1, 0),
       S(mm(4000)),
     );
@@ -148,10 +151,47 @@ describe('numerical QA', () => {
       tolerance: 25,
       source: 'TIC-tech; measured by ray onto the roof plate',
     });
+    // The whole stack from the ground to the top of the cupola, against a
+    // sourced overall height. Every term in it — ring plane, turret interior
+    // height, both roof plates and the drum — was estimated separately, so
+    // their sum landing on the sourced figure is a real cross-check.
+    //
+    // Aimed at the cupola's RIM, not its axis: the commander's hatch is a
+    // genuine aperture and a ray down the middle drops straight through it,
+    // through the cupola's own opening in the turret roof, and lands on the
+    // hull. Which is a good sign, but not a measurement of the cupola.
+    const cupolaRimX = mm(
+      TURRET.cupola.centreX +
+        Math.sign(TURRET.cupola.centreX) *
+          ((TURRET.cupola.hatchDiameter + TURRET.cupola.outerDiameter) / 4),
+    );
+    const cupolaHit = measureThicknessAlong(
+      geometry,
+      new Vector3(S(cupolaRimX), S(mm(4200)), S(mm(TURRET.ring.centreZ + TURRET.cupola.centreZ))),
+      new Vector3(0, -1, 0),
+      S(mm(4200)),
+    );
     record({
-      feature: 'Tallest fitting above roof',
+      feature: 'Height to cupola top',
+      reference: SPEC.overall.heightToCupola,
+      model: cupolaHit === null ? NaN : 4200 - toMM(cupolaHit),
+      unit: 'mm',
+      tolerance: 120,
+      source: 'TIC-tech; measured by ray onto the cupola roof',
+    });
+    // The tallest thing on the REAR DECK, behind the turret — which is the
+    // Feifel trunking. Reading the bounding box instead reports the cupola,
+    // now that there is one.
+    let rearDeckTop = -Infinity;
+    const position = geometry.attributes.position!;
+    for (let i = 0; i < position.count; i++) {
+      if (toMM(position.getZ(i)) > -1500) continue;
+      rearDeckTop = Math.max(rearDeckTop, toMM(position.getY(i)));
+    }
+    record({
+      feature: 'Tallest fitting on the rear deck',
       reference: HULL.roofY + 250,
-      model: toMM(box.max.y),
+      model: rearDeckTop,
       unit: 'mm',
       tolerance: 120,
       source: 'REF-photo rear deck: Feifel trunking is a low hump',

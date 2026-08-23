@@ -103,7 +103,56 @@ export const VISION_DEVICES: readonly VisionDevice[] = [
     throughThickness: ARMOUR.hull.driverPlate.thickness,
     shape: 'bore',
   },
+  ...cupolaSlits(),
 ];
+
+/**
+ * The commander's five vision slits, generated rather than listed.
+ *
+ * Writing them out five times would mean five chances to put one in the wrong
+ * place, and the fifth would be the one nobody checked. Deriving them from the
+ * cupola's own geometry means a slit cannot exist at an angle the drum does not
+ * actually have an opening at.
+ *
+ * The commander's eye sits inside the drum looking outward through whichever
+ * slit he has turned to, so each device shares one eye position and differs
+ * only in bearing.
+ */
+function cupolaSlits(): VisionDevice[] {
+  const c = TURRET.cupola;
+  const roofTop = mm(
+    TURRET.ring.planeY + TURRET.shell.interiorHeight + ARMOUR.turret.roof.thickness,
+  );
+  const centreY = mm(roofTop + c.height / 2);
+  const centreZ = mm(TURRET.ring.centreZ + c.centreZ);
+  const outer = mm(c.outerDiameter / 2);
+  const inner = mm(outer - c.wallThickness);
+
+  return Array.from({ length: c.visionSlits }, (_, i): VisionDevice => {
+    const bearing = (i / c.visionSlits) * Math.PI * 2;
+    const dx = Math.cos(bearing);
+    const dz = Math.sin(bearing);
+    return {
+      id: `cupola-slit-${i + 1}`,
+      label: `Commander's vision slit ${i + 1}`,
+      station: 'commander',
+      // Standing at the drum's axis, eye at slit height: the standoff is the
+      // drum's own inner radius, so it comes out of the geometry rather than
+      // being another number to keep in step.
+      eye: [c.centreX, centreY, centreZ],
+      apertureCentre: [
+        mm(c.centreX + dx * outer),
+        centreY,
+        mm(centreZ + dz * outer),
+      ],
+      clearWidth: c.slitWidth,
+      clearHeight: c.slitHeight,
+      viewDirection: [dx, 0, dz],
+      throughThickness: mm(outer - inner),
+      shape: 'slit',
+    };
+  });
+}
 
 /**
  * Angular window a device gives its user, derived from the eye-to-aperture

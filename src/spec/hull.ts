@@ -295,6 +295,15 @@ export const HULL = {
     side: mm(5),
   },
 
+  /**
+   * Width of the tessellated band inset from a large plate's boundary.
+   *
+   * Paint chipping keys off distance-to-edge, and a flat quad has no interior
+   * vertices at all, so without this band a whole plate interpolates to zero
+   * and chips uniformly across its face.
+   */
+  edgeBand: mm(60),
+
   /** Tow shackles at each corner. */
   towPoint: {
     centreX: mm(760),
@@ -532,6 +541,7 @@ export const HULL_META: MetaOf<typeof HULL> = {
     belly: { tol: 3, source: 'fabrication practice', confidence: 'estimated', note: CHAMFER_NOTE },
     side: { tol: 3, source: 'fabrication practice', confidence: 'estimated', note: CHAMFER_NOTE },
   },
+  edgeBand: { tol: 20, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING },
   towPoint: {
     centreX: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     frontY: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },

@@ -159,9 +159,55 @@ export function emitRevolve(mb: MeshBuilder, opts: RevolveOptions): { triangleCo
           capEnd(profile.length - 1, false);
         }
 
-        // A partial revolution leaves two flat faces where the sweep starts
-        // and stops. Close them against a single shared column of axis vertices
-        // rather than re-emitting the axis for every quad.
+        // A partial revolution of a CLOSED profile — a tube wall section, which
+        // is what a cupola panel between two vision slits is — needs its two cut
+        // ends capped with the profile's own shape. Fanning to the axis, as the
+        // open-profile case below does, would fill the bore; leaving them open,
+        // as this did, turns every panel boundary into a hole. The cupola's five
+        // vision slits came out as one continuous 700 mm gap.
+        if (!fullTurn && profileClosed) {
+          const loop = profile.slice(0, -1);
+          const centroid = loop
+            .reduce((acc, pt) => acc.add(pt), new Vector2())
+            .divideScalar(loop.length);
+
+          for (const [edgeIdx, outwardSign] of [
+            [0, -1],
+            [ringCount - 1, 1],
+          ] as const) {
+            const a = arcStart + (edgeIdx / segments) * arcLength;
+            const cos = Math.cos(a);
+            const sin = Math.sin(a);
+            // The cut face's normal is tangential to the sweep.
+            const nrm = new Vector3(-sin, 0, cos).multiplyScalar(outwardSign);
+
+            const hub = put(
+              new Vector3(
+                origin.x + cos * centroid.x,
+                origin.y + centroid.y,
+                origin.z + sin * centroid.x,
+              ),
+              nrm.clone(),
+              new Vector2(0.5, 0.5),
+            );
+            const rim = loop.map((pt) =>
+              put(
+                new Vector3(
+                  origin.x + cos * pt.x,
+                  origin.y + pt.y,
+                  origin.z + sin * pt.x,
+                ),
+                nrm.clone(),
+                new Vector2(0.5, 0.5),
+              ),
+            );
+            mb.fan(hub, outwardSign > 0 ? rim : [...rim].reverse(), true);
+          }
+        }
+
+        // A partial revolution of an OPEN profile leaves two flat faces where
+        // the sweep starts and stops. Close them against a single shared column
+        // of axis vertices rather than re-emitting the axis for every quad.
         if (!fullTurn && !profileClosed) {
           const axisColumn = profile.map((pt) =>
             put(

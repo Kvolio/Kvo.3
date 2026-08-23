@@ -1,5 +1,6 @@
-import { mm, deg, port, starboard } from './units.js';
+import { mm, deg, port, starboard, type MM } from './units.js';
 import type { MetaOf } from './meta.js';
+import { ARMOUR } from './armour.js';
 
 /**
  * Turret and commander's cupola.
@@ -52,8 +53,13 @@ export const TURRET = {
     width: mm(2170),
     /** Height from the ring plane to the underside of the roof plate. */
     interiorHeight: mm(830),
-    /** Front plate width, between the side plate inner faces. */
-    frontPlateWidth: mm(1700),
+    /**
+     * How far the turret reaches forward of the ring centre.
+     *
+     * The rest of its length is behind, which is why a Tiger's turret overhangs
+     * the engine deck: the bustle is longer than the nose.
+     */
+    frontOverhang: mm(1000),
   },
 
   /**
@@ -76,6 +82,30 @@ export const TURRET = {
     /** Cupola centre offset from the turret ring centre. Sits left and rear. */
     centreX: port(mm(500)),
     centreZ: mm(-820),
+  },
+
+  /**
+   * The cast mantlet and the opening it covers.
+   *
+   * The Ausf. H carries the TZF 9b BINOCULAR sight, so there are TWO sight
+   * apertures through the mantlet rather than the single one of the monocular
+   * TZF 9c that replaces it in March 1944. That pair is one of the clearest
+   * date markers on the whole vehicle, and it is why they are counted here.
+   */
+  mantlet: {
+    width: mm(1300),
+    height: mm(550),
+    /** How far the casting stands proud of the front plate. */
+    proud: mm(200),
+    /** The opening cut in the front plate, behind the casting. */
+    apertureWidth: mm(1000),
+    apertureHeight: mm(480),
+    sightApertures: 2,
+    sightApertureDiameter: mm(60),
+    /** Between the two sight apertures, centre to centre. */
+    sightApertureSpacing: mm(140),
+    /** Sight cluster offset from the bore, to the gunner's side. */
+    sightOffsetX: mm(330),
   },
 
   loaderHatch: {
@@ -128,6 +158,32 @@ export const TURRET = {
   },
 } as const;
 
+/**
+ * Width of the front plate: it spans BETWEEN the side plates' inner faces, so
+ * it follows from the shell and the side armour rather than being a third
+ * number to keep in step with them. Carried separately it was 1,700 mm against
+ * a 2,010 mm gap, and rendered as a panel floating in a hole.
+ */
+export const TURRET_FRONT_PLATE_WIDTH: MM = mm(
+  TURRET.shell.width - ARMOUR.turret.side.thickness * 2,
+);
+
+/** How far the turret reaches AFT of the ring centre. The bustle. */
+export const TURRET_REAR_OVERHANG: MM = mm(
+  TURRET.shell.length - TURRET.shell.frontOverhang,
+);
+
+/** Radius of the horseshoe's rear curve: the turret's rear IS a semicircle. */
+export const TURRET_REAR_RADIUS: MM = mm(TURRET.shell.width / 2);
+
+/** Where that semicircle's centre sits, in turret-local Z. */
+export const TURRET_REAR_ARC_Z: MM = mm(-(TURRET_REAR_OVERHANG - TURRET_REAR_RADIUS));
+
+const MEASURED_FRONT =
+  'REF-drawing front elevation, measured: the mantlet reads as a raised central ' +
+  'casting on the turret front, scaled on the width over tracks. Good to about ' +
+  '150 mm, hence the tolerances.';
+
 const MEASURED_PLAN =
   'REF-drawing plan view, measured: the turret outline scanned column by column ' +
   'and scaled on the superstructure width, which the plan draws as a pair of ' +
@@ -158,13 +214,13 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
   shell: {
     length: { tol: 150, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     width: { tol: 150, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    frontOverhang: { tol: 120, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     interiorHeight: {
       tol: 30,
       source: 'derived from heightToCupola less cupola height and roof thickness',
       confidence: 'estimated',
       note: DRAWING_ESTIMATE,
     },
-    frontPlateWidth: { tol: 30, source: 'REF-drawing front view', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   cupola: {
     outerDiameter: { tol: 25, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
@@ -178,6 +234,17 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     hatchOpenAngle: { tol: 10, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
     centreX: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING_ESTIMATE },
     centreZ: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  },
+  mantlet: {
+    width: { tol: 150, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    height: { tol: 120, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    proud: { tol: 80, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    apertureWidth: { tol: 120, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    apertureHeight: { tol: 100, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    sightApertures: { tol: 0, source: 'TIC-changes: TZF 9b is binocular until Mar 1944', confidence: 'secondary' },
+    sightApertureDiameter: { tol: 15, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    sightApertureSpacing: { tol: 30, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    sightOffsetX: { tol: 80, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   loaderHatch: {
     diameter: { tol: 25, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING_ESTIMATE },
