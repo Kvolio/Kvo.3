@@ -213,6 +213,19 @@ window.__TIGER__ = {
    * some shade of ochre and the outline has to be judged by eye — which is what
    * let a wedge-shaped front hull survive this long.
    */
+  /**
+   * Hide the on-screen chrome without changing the lighting. The captured
+   * views are evidence, and an info bar across the driver's plate hides
+   * exactly the part of the tank a critic needs to look at.
+   */
+  hideChrome: (on: boolean) => {
+    hud.root.style.display = on ? 'none' : '';
+    mobile.root.style.display = on ? 'none' : mobileVisible ? '' : 'none';
+    overlay?.root.style.setProperty('display', on ? 'none' : '');
+    // The dimension envelope is a measuring aid, not part of the vehicle.
+    envelopeLines.visible = !on;
+    engine.render();
+  },
   silhouetteMode: (on: boolean) => {
     // The overlays are not part of the vehicle. The controls hint in
     // particular is a wide band of grey text across the bottom of the frame,

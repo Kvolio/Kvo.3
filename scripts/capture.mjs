@@ -59,10 +59,10 @@ const ORTHO_VIEWS = [
 
 /** The four three-quarters, in perspective, at a crewman's eye height. */
 const QUARTER_VIEWS = [
-  { id: 'quarter-front-left', eye: [-7000, 1650, 7000], target: [0, 1300, 0] },
-  { id: 'quarter-front-right', eye: [7000, 1650, 7000], target: [0, 1300, 0] },
-  { id: 'quarter-rear-left', eye: [-7000, 1650, -7000], target: [0, 1300, 0] },
-  { id: 'quarter-rear-right', eye: [7000, 1650, -7000], target: [0, 1300, 0] },
+  { id: 'quarter-front-left', eye: [-4600, 2000, 4600], target: [0, 1150, 200] },
+  { id: 'quarter-front-right', eye: [4600, 2000, 4600], target: [0, 1150, 200] },
+  { id: 'quarter-rear-left', eye: [-4600, 2000, -4600], target: [0, 1150, -200] },
+  { id: 'quarter-rear-right', eye: [4600, 2000, -4600], target: [0, 1150, -200] },
 ];
 
 const DETAIL_VIEWS = [
@@ -92,6 +92,10 @@ await page.goto(`http://localhost:${PORT}/?quality=mid`);
 await page.waitForFunction(() => window.__TIGER__?.ready === true, undefined, { timeout: 90_000 });
 await page.waitForTimeout(1500);
 
+// Every captured view is evidence, so the on-screen chrome comes off for all of
+// them. The info bar sits squarely across the driver's plate.
+await page.evaluate(() => window.__TIGER__.hideChrome(true));
+
 for (const view of ORTHO_VIEWS) {
   await page.evaluate((v) => {
     window.__TIGER__.orthoView(v.eye, v.target, v.height);
@@ -114,7 +118,12 @@ for (const view of ORTHO_VIEWS) {
   await page.screenshot({ path: join(OUT, `${view.id}-silhouette.png`) });
   console.log(`  captured ${view.id}-silhouette`);
 }
-await page.evaluate(() => window.__TIGER__.silhouetteMode(false));
+// silhouetteMode restores the envelope lines on its way out, so the chrome has
+// to come off again before the perspective views.
+await page.evaluate(() => {
+  window.__TIGER__.silhouetteMode(false);
+  window.__TIGER__.hideChrome(true);
+});
 
 await page.evaluate(() => window.__TIGER__.clearOrthoView());
 

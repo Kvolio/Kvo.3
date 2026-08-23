@@ -133,6 +133,12 @@ export const FEIFEL = {
   boltPlaneOffset: mm(166),
   /** Height the trunk runs above the engine deck on its way forward. */
   trunkRise: mm(130),
+  /**
+   * Forward run of the bend that lifts the trunk from the canister's outlet to
+   * its resting height on the deck. A shape parameter for that bend, kept
+   * separate from `trunkRise` so neither number silently sets the other.
+   */
+  trunkBendRun: mm(120),
   /** Lateral position where the trunk crosses the deck, inboard of the canister. */
   trunkInboardX: mm(600),
   /** How far short of the engine hatch the trunk terminates. */
@@ -219,6 +225,7 @@ export const FEIFEL_META: MetaOf<typeof FEIFEL> = {
   profileHeight: { tol: 40, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING_ESTIMATE },
   boltCircleRadius: { tol: 25, source: 'T1I-feifel (four mounting points)', confidence: 'estimated', note: DRAWING_ESTIMATE },
   boltPlaneOffset: { tol: 25, source: 'T1I-feifel', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  trunkBendRun: { tol: 60, source: 'REF-photo rear deck', confidence: 'estimated', note: DRAWING_ESTIMATE },
   trunkRise: { tol: 40, source: 'T1I-feifel', confidence: 'estimated', note: DRAWING_ESTIMATE },
   trunkInboardX: { tol: 60, source: 'T1I-feifel', confidence: 'estimated', note: DRAWING_ESTIMATE },
   trunkApproach: { tol: 60, source: 'T1I-feifel', confidence: 'estimated', note: DRAWING_ESTIMATE },

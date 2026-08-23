@@ -1,4 +1,4 @@
-import { R, fromHorizontal, mm, deg, type MM } from './units.js';
+import { R, fromHorizontal, mm, deg, port, starboard, type MM } from './units.js';
 import type { MetaOf } from './meta.js';
 import { OVERALL } from './overall.js';
 import { ARMOUR } from './armour.js';
@@ -65,7 +65,7 @@ export const HULL = {
 
   /** Driver's hatch centre, on the roof, port side. */
   driverHatch: {
-    centreX: mm(-560),
+    centreX: port(mm(560)),
     centreZ: mm(1700),
     diameter: mm(600),
     thickness: mm(100),
@@ -74,7 +74,7 @@ export const HULL = {
 
   /** Radio operator's hatch, mirroring the driver's to starboard. */
   radioHatch: {
-    centreX: mm(560),
+    centreX: starboard(mm(560)),
     centreZ: mm(1700),
     diameter: mm(600),
     thickness: mm(100),
@@ -83,7 +83,7 @@ export const HULL = {
 
   /** Driver's visor (Fahrersehklappe) in the front plate, with its sliding shutter. */
   driverVisor: {
-    centreX: mm(-560),
+    centreX: port(mm(560)),
     centreY: mm(1440),
     width: mm(280),
     height: mm(95),
@@ -92,7 +92,7 @@ export const HULL = {
 
   /** Hull machine gun ball mount, starboard side of the front plate. */
   hullMGMount: {
-    centreX: mm(560),
+    centreX: starboard(mm(560)),
     centreY: mm(1430),
     /**
      * The bore cut through the front plate. Smaller than the ball mount that
@@ -129,9 +129,15 @@ export const HULL = {
     grilleSlotWidth: mm(34),
   },
 
-  /** Exhaust stacks on the rear plate. */
+  /**
+   * Exhaust stacks on the rear plate, inboard of the Feifel canisters.
+   *
+   * These sat at 900 mm and interpenetrated the canisters by 145 mm — the two
+   * were authored separately and never checked against each other.
+   * `tests/parts/rearClash.test.ts` now asserts the clearance.
+   */
   exhaust: {
-    centreX: mm(900),
+    centreX: mm(700),
     diameter: mm(150),
     height: mm(700),
     /** Armoured guard around the base, added January 1943. */

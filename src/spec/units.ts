@@ -52,9 +52,23 @@ export const toDEG = (v: number): DEG => deg((v * 180) / Math.PI);
 /**
  * Vehicle coordinate frame (right-handed, three.js convention):
  *
- *   +X  starboard (the vehicle's right, the radio operator's side)
+ *   +X  PORT (the vehicle's left, the driver's side)
  *   +Y  up
  *   +Z  forward (the direction the gun points at zero traverse)
+ *
+ * Note the first line, which is the opposite of most people's first guess and
+ * was wrong here for several stages. In a right-handed frame with +Y up and +Z
+ * forward, the vehicle's own starboard side is `forward x up = -X`. Face north
+ * with +Z north and +Y up: +X comes out WEST, and your right hand points east.
+ *
+ * A tank built on the wrong reading of that is a perfect mirror image of itself
+ * — driver and radio operator swapped, cupola on the wrong side of the turret —
+ * and it looks entirely plausible until it is set beside a photograph. Rather
+ * than leave the sign to be re-derived correctly every time, laterality is
+ * written by NAME below: `port()` and `starboard()` take a positive magnitude
+ * and place it. `tests/spec/laterality.test.ts` re-derives starboard from the
+ * cross product and measures the built geometry, so a comment cannot lie about
+ * which side anything is on.
  *
  * Origin sits on the GROUND PLANE, on the vehicle's lateral centreline, at the
  * longitudinal midpoint of the hull. That choice lets the sourced figures be
@@ -78,5 +92,20 @@ export type Side = 'left' | 'right';
 
 export const SIDES: readonly Side[] = ['left', 'right'] as const;
 
-/** Sign of the X axis for a given side. Left is port, which is -X. */
-export const sideSign = (side: Side): -1 | 1 => (side === 'left' ? -1 : 1);
+/**
+ * Sign of the X axis for a given side. Port (the vehicle's left) is +X — see
+ * the frame note above before changing this.
+ */
+export const sideSign = (side: Side): -1 | 1 => (side === 'left' ? 1 : -1);
+
+/** Place a positive magnitude on the vehicle's port (left) side. */
+export const port = (magnitude: MM): MM => mm(Math.abs(magnitude));
+
+/** Place a positive magnitude on the vehicle's starboard (right) side. */
+export const starboard = (magnitude: MM): MM => mm(-Math.abs(magnitude));
+
+/**
+ * The vehicle's starboard direction, derived rather than asserted. Tests use
+ * this so that laterality is checked against the frame's own definition.
+ */
+export const STARBOARD_X = -1;

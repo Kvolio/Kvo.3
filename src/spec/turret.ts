@@ -1,4 +1,4 @@
-import { mm, deg } from './units.js';
+import { mm, deg, port, starboard } from './units.js';
 import type { MetaOf } from './meta.js';
 
 /**
@@ -64,7 +64,7 @@ export const TURRET = {
     hatchThickness: mm(60),
     hatchOpenAngle: deg(105),
     /** Cupola centre offset from the turret ring centre. Sits left and rear. */
-    centreX: mm(-500),
+    centreX: port(mm(500)),
     centreZ: mm(-820),
   },
 
@@ -74,7 +74,7 @@ export const TURRET = {
     diameter: mm(560),
     thickness: mm(25),
     openAngle: deg(100),
-    centreX: mm(520),
+    centreX: starboard(mm(520)),
     centreZ: mm(-560),
   },
 

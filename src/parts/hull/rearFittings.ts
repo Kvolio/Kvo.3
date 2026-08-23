@@ -164,11 +164,17 @@ function buildFeifel(ctx: BuildContext): void {
     // Flexible metal trunk, so it is drawn as a curve rather than as straight
     // runs meeting at a corner. A right angle here reads as rigid pipe, which
     // is exactly what this is not.
+    //
+    // The trunk's axis rests `trunkRise` above the roof once it is on the deck.
+    // The bend that gets it there must not climb ABOVE that resting height: the
+    // trunking in the photographs is a low hump over the rear of the deck, not
+    // an arch. The intermediate control point therefore sits at the resting
+    // height and only carries the curve forward over the rear plate's top edge.
     const deckY = mm(HULL.roofY + FEIFEL.trunkRise);
     const trunkCurve = new CatmullRomCurve3(
       [
         new Vector3(S(x), S(topY), S(axisZ)),
-        new Vector3(S(x), S(mm(deckY + FEIFEL.trunkRise)), S(mm(axisZ + FEIFEL.trunkRise / 2))),
+        new Vector3(S(x), S(deckY), S(mm(axisZ + FEIFEL.trunkBendRun))),
         new Vector3(S(x), S(deckY), S(mm(HULL.rearZ + FEIFEL.trunkApproach))),
         new Vector3(
           S(mm(side * FEIFEL.trunkInboardX)),
