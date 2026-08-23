@@ -147,6 +147,12 @@ export const TURRET = {
     /** Angle above horizontal that the cluster points. */
     elevation: deg(45),
     spacing: mm(105),
+    /** Wall of a tube, so the mouth is open rather than a bollard. */
+    wallThickness: mm(8),
+    /** Cluster centre, relative to the turret ring centre. */
+    clusterZ: mm(420),
+    /** How far the bracket holds the cluster off the turret side. */
+    standoff: mm(60),
   },
 
   /** Turret rear stowage bin, the so-called Rommelkiste. Added January 1943. */
@@ -154,11 +160,17 @@ export const TURRET = {
     width: mm(1500),
     height: mm(430),
     depth: mm(300),
+    /** How far the bin's top sits below the turret roof line. */
+    dropBelowRoof: mm(120),
+    /** Edge band on the sheet, for the chipping shader. */
+    edgeBand: mm(30),
   },
 
   /** Spare track links racked on the turret sides, visible in REF-photo-3. */
   spareTrackLinks: {
     perSide: 3,
+    /** Rack centre, relative to the turret ring centre. */
+    centreZ: mm(-250),
   },
 } as const;
 
@@ -276,14 +288,20 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     tubeDiameter: { tol: 5, source: 'NbK 39 90 mm designation', confidence: 'secondary' },
     tubeLength: { tol: 20, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
     elevation: { tol: 10, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
+    wallThickness: { tol: 3, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    standoff: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    clusterZ: { tol: 120, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
     spacing: { tol: 15, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
   },
   stowageBin: {
+    edgeBand: { tol: 12, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    dropBelowRoof: { tol: 50, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
     width: { tol: 50, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
     height: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
     depth: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: PHOTO_ESTIMATE },
   },
   spareTrackLinks: {
+    centreZ: { tol: 150, source: 'REF-photo-3: links racked on the turret side', confidence: 'estimated', note: DRAWING_ESTIMATE },
     perSide: { tol: 0, source: 'REF-photo-3', confidence: 'secondary' },
   },
 };

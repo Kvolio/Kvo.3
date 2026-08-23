@@ -81,7 +81,7 @@ function emitTube(ctx: BuildContext, frame: Matrix4): void {
       new Vector2(S(boreR), S(start)),
     ],
     segments: TUBE_SEGMENTS,
-    material: 'machinedSteel',
+    material: 'armourPaintedExterior',
     region: Region.Exterior,
     frame: laidForward(frame),
     wear: WEAR.incidental,
@@ -104,7 +104,7 @@ function emitTube(ctx: BuildContext, frame: Matrix4): void {
       segments: 4,
       arcStart: a,
       arcLength: Math.PI - slotArc,
-      material: 'machinedSteel',
+      material: 'armourPaintedExterior',
       region: Region.Exterior,
       frame: laidForward(frame),
       edgeDist: GUN_EDGE_DIST,
@@ -148,7 +148,14 @@ function emitMantlet(ctx: BuildContext): void {
     ),
     chamfer: HULL.chamfer.structural,
     region: Region.Exterior,
-    materials: { inner: 'castSteelBare', outer: 'castSteelBare', edge: 'castSteelBare' },
+    // Painted, like everything else: the February 1943 order put dunkelgelb on
+    // the whole vehicle, mantlet and barrel included. Bare cast steel is what a
+    // museum piece looks like after restoration, not what left Henschel.
+    materials: {
+      inner: 'armourPaintedExterior',
+      outer: 'armourPaintedExterior',
+      edge: 'armourPaintedExterior',
+    },
     edgeBandWidth: m.edgeBand,
   });
 }

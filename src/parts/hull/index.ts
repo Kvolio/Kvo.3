@@ -10,6 +10,7 @@ import { buildRunningGear } from '../running/suspension.js';
 import { buildTracks } from '../running/track.js';
 import { buildTurret } from '../turret/shell.js';
 import { buildGun } from '../turret/gun.js';
+import { buildTurretFittings } from '../turret/fittings.js';
 
 export { buildLowerHull, buildSuperstructure, buildRearFittings };
 
@@ -33,6 +34,7 @@ export function buildHull(ctx: BuildContext): PartResult {
     buildTracks(ctx),
     buildTurret(ctx),
     buildGun(ctx),
+    buildTurretFittings(ctx),
   ]);
 }
 

@@ -215,10 +215,16 @@ describe('numerical QA', () => {
     // The tallest thing on the REAR DECK, behind the turret — which is the
     // Feifel trunking. Reading the bounding box instead reports the cupola,
     // now that there is one.
+    // Behind the turret AND its stowage bin, which hangs off the bustle at
+    // about -1,755 mm and is otherwise the tallest thing the scan finds.
+    const rearDeckAft = mm(
+      TURRET.ring.centreZ - TURRET.shell.length + TURRET.shell.frontOverhang,
+    );
+    const scanFrom = mm(rearDeckAft - TURRET.stowageBin.depth - 150);
     let rearDeckTop = -Infinity;
     const position = geometry.attributes.position!;
     for (let i = 0; i < position.count; i++) {
-      if (toMM(position.getZ(i)) > -1500) continue;
+      if (toMM(position.getZ(i)) > scanFrom) continue;
       rearDeckTop = Math.max(rearDeckTop, toMM(position.getY(i)));
     }
     record({
