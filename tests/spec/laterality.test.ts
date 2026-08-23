@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { Vector3 } from 'three';
 import { buildAssembly, buildHull } from '../../src/parts/hull/index.js';
 import { measureThicknessAlong } from '../../src/geom/analysis.js';
-import { HULL, S, TURRET, mm } from '../../src/spec/index.js';
+import {
+  HULL,
+  S,
+  TURRET,
+  driverPlateOuterZ,
+  mm,
+  toMM,
+  type MM,
+} from '../../src/spec/index.js';
 
 /**
  * Laterality.
@@ -16,6 +24,9 @@ import { HULL, S, TURRET, mm } from '../../src/spec/index.js';
  * These tests do not trust the frame's comment. They re-derive starboard from
  * the axes themselves and then check that the geometry actually agrees.
  */
+
+/** How much a curved casting must drop between the two probe offsets. */
+const FALL_AWAY = 10;
 
 /** Starboard, from the frame's own definition rather than from a constant. */
 const FORWARD = new Vector3(0, 0, 1);
@@ -46,51 +57,68 @@ describe('laterality', () => {
     expect(Math.sign(TURRET.loaderHatch.centreX)).toBe(Math.sign(STARBOARD.x));
   });
 
-  it('cuts the apertures on the sides the spec claims', () => {
+  it('stands the right casting proud on each side', () => {
     // Measured on the built hull, not read back off the spec: a builder that
     // negates X somewhere would satisfy the checks above and still produce a
     // mirrored tank.
+    //
+    // The discriminator is the CASTINGS rather than the aperture shapes. The
+    // machine gun's ball mount stands 120 mm off the plate and the driver's
+    // visor housing 70 mm, so how far each station juts out says which is
+    // which — and unlike "is this hole open", it keeps working now that the
+    // bore has a barrel down it.
     const geometry = buildAssembly(buildHull).context.render.toGeometry().geometry;
     const aft = new Vector3(0, 0, -1);
 
-    /** True when a ray fired aft at this height and side passes through a hole. */
-    const isOpen = (x: number, y: number): boolean => {
+    /** How far the frontal fitting at this station stands off the plate. */
+    const standoff = (x: MM, y: MM): number => {
+      const from = 4600;
       const hit = measureThicknessAlong(
         geometry,
-        new Vector3(S(mm(x)), S(mm(y)), S(mm(4600))),
+        new Vector3(S(x), S(y), S(mm(from))),
         aft,
-        S(mm(2400)),
+        S(mm(2600)),
       );
-      if (hit === null) return true;
-      const surface = new Vector3(S(mm(x)), S(mm(y)), S(mm(4600))).addScaledVector(
-        aft,
-        hit + 1e-5,
-      );
-      const through = measureThicknessAlong(geometry, surface, aft, S(mm(400)));
-      // A bore reads as a few millimetres of shutter or nothing at all, where
-      // solid plate reads as the better part of a hundred.
-      return through === null || through < S(mm(40));
+      if (hit === null) return NaN;
+      return from - toMM(hit) - driverPlateOuterZ(y);
     };
 
-    // Both sides are open at this height — the driver's visor sits within ten
-    // millimetres of the MG's centreline — so the two are told apart by SHAPE.
-    // Sixty millimetres above centre the round bore is still open, while the
-    // visor's 95 mm slot has closed. Probing only the centres would pass on a
-    // mirrored hull.
-    const mgX = HULL.hullMGMount.centreX;
-    const probeY = mm(HULL.hullMGMount.centreY + 60);
-    expect(HULL.driverVisor.height / 2).toBeLessThan(60);
+    // Told apart by SHAPE, not height. The machine gun's mount is a sphere, so
+    // its standoff falls away as you move off its axis; the driver's visor
+    // housing is a flat slab, so its standoff does not change at all. Comparing
+    // heights instead is unfair to the ball — at any useful offset a sphere is
+    // already well below its own crown — and comparing shapes cannot be fooled
+    // by either casting being resized later.
+    const profileAt = (centre: MM, y: MM, apertureHalf: number, castingHalf: number) => {
+      const near = apertureHalf + (castingHalf - apertureHalf) * 0.25;
+      const far = apertureHalf + (castingHalf - apertureHalf) * 0.75;
+      const at = (r: number): number =>
+        standoff(mm(centre + Math.sign(centre) * r), y);
+      return { near: at(near), far: at(far) };
+    };
 
-    expect(isOpen(mgX, HULL.hullMGMount.centreY), 'no bore on the starboard side').toBe(true);
-    expect(isOpen(-mgX, HULL.driverVisor.centreY), 'no visor on the port side').toBe(true);
+    const gun = profileAt(
+      HULL.hullMGMount.centreX,
+      HULL.hullMGMount.centreY,
+      HULL.hullMGMount.apertureDiameter / 2,
+      HULL.hullMGMount.ballDiameter / 2,
+    );
+    const visor = profileAt(
+      HULL.driverVisor.centreX,
+      HULL.driverVisor.centreY,
+      HULL.driverVisor.width / 2,
+      HULL.driverVisor.housingWidth / 2,
+    );
 
+    expect(gun.near, 'no ball mount on the starboard side').toBeGreaterThan(0);
+    expect(visor.near, 'no visor housing on the port side').toBeGreaterThan(0);
+
+    // The sphere falls away; the slab does not.
+    expect(gun.far, 'the starboard casting is flat, so it is not a ball mount')
+      .toBeLessThan(gun.near - FALL_AWAY);
     expect(
-      isOpen(mgX, probeY),
-      'the starboard aperture closes 60 mm up, so it is a slot, not the MG bore',
-    ).toBe(true);
-    expect(
-      isOpen(-mgX, probeY),
-      'the port aperture is still open 60 mm up, so it is a bore, not the visor slot',
-    ).toBe(false);
+      Math.abs(visor.far - visor.near),
+      'the port casting is curved, so it is not a visor housing',
+    ).toBeLessThan(FALL_AWAY);
   });
 });

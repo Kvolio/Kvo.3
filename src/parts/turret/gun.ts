@@ -7,7 +7,7 @@ import { GUN } from '../../spec/armament.js';
 import { HULL } from '../../spec/hull.js';
 import { TURRET } from '../../spec/turret.js';
 import { structuralPlate } from '../emit.js';
-import { circle, rect, translate, type Poly2 } from '../../geom/poly2.js';
+import { circle, rect, roundedRect, translate, type Poly2 } from '../../geom/poly2.js';
 import type { BuildContext, PartResult } from '../types.js';
 import { facingForward } from '../hull/frames.js';
 
@@ -122,7 +122,21 @@ function laidForward(frame: Matrix4): Matrix4 {
   return frame.clone().multiply(new Matrix4().makeRotationX(Math.PI / 2));
 }
 
-/** The cast mantlet, with the gun's bore and the two TZF 9b sight apertures. */
+/**
+ * The cast mantlet.
+ *
+ * It is a CASTING, not a plate, and that difference is most of a Tiger's face:
+ * a broad slab with heavily rounded ends carrying a raised circular boss around
+ * the gun tube, the boss more than half the slab's own height. Built as a plain
+ * extruded rectangle it reads as a panel bolted to the front, which is exactly
+ * what it looked like.
+ *
+ * Three openings through it, and each is a date marker or a weapon:
+ *   - the bore, with clearance round the tube;
+ *   - TWO sight apertures to PORT, because the Ausf. H mounts the binocular
+ *     TZF 9b; one hole would make this a March 1944 vehicle or later;
+ *   - the coaxial MG 34 port to STARBOARD, which was missing entirely.
+ */
 function emitMantlet(ctx: BuildContext): void {
   const m = TURRET.mantlet;
   const frontZ = mm(TURRET.ring.centreZ + TURRET.shell.frontOverhang);
@@ -137,16 +151,26 @@ function emitMantlet(ctx: BuildContext): void {
     );
   });
 
+  const coax: Poly2 = translate(
+    circle(mm(m.coaxPortDiameter / 2), SIGHT_SEGMENTS),
+    m.coaxOffsetX,
+    0,
+  );
+
+  const slabFrame = facingForward(
+    mm(frontZ + m.proud),
+    mm(GUN.elevation.trunnionY),
+    ARMOUR.turret.front.angle,
+  );
+
+  // The slab. Rounded ends rather than square corners, and a chamfer wide
+  // enough to read as a cast fillet instead of a machined arris.
   structuralPlate(ctx, {
-    outline: rect(m.width, m.height),
-    holes: [bore, ...sights],
+    outline: roundedRect(m.width, m.height, m.cornerRadius, MANTLET_CORNER_SEGMENTS),
+    holes: [bore, ...sights, coax],
     thickness: mm(m.proud + ARMOUR.turret.front.thickness),
-    frame: facingForward(
-      mm(frontZ + m.proud),
-      mm(GUN.elevation.trunnionY),
-      ARMOUR.turret.front.angle,
-    ),
-    chamfer: HULL.chamfer.structural,
+    frame: slabFrame,
+    chamfer: m.bossFillet,
     region: Region.Exterior,
     // Painted, like everything else: the February 1943 order put dunkelgelb on
     // the whole vehicle, mantlet and barrel included. Bare cast steel is what a
@@ -158,7 +182,35 @@ function emitMantlet(ctx: BuildContext): void {
     },
     edgeBandWidth: m.edgeBand,
   });
+
+  // The raised boss around the tube, standing proud of the slab again, with a
+  // filleted rim. This is the feature that makes the mantlet read as a casting.
+  const bossFrame = slabFrame.clone().multiply(new Matrix4().makeRotationX(Math.PI / 2));
+  const boreRadius = mm(GUN.breechEndDiameter / 2 + m.boreClearance);
+  const bossRadius = mm(m.bossDiameter / 2);
+  emitRevolve(ctx.render, {
+    profile: [
+      new Vector2(S(boreRadius), 0),
+      new Vector2(S(mm(bossRadius - m.bossFillet)), 0),
+      new Vector2(S(bossRadius), S(m.bossFillet)),
+      new Vector2(S(bossRadius), S(mm(m.bossProud - m.bossFillet))),
+      new Vector2(S(mm(bossRadius - m.bossFillet)), S(m.bossProud)),
+      new Vector2(S(boreRadius), S(m.bossProud)),
+      new Vector2(S(boreRadius), 0),
+    ],
+    segments: BOSS_SEGMENTS,
+    material: 'armourPaintedExterior',
+    region: Region.Exterior,
+    frame: bossFrame,
+    edgeDist: GUN_EDGE_DIST,
+  });
 }
+
+/** Segments around one rounded corner of the mantlet slab. */
+const MANTLET_CORNER_SEGMENTS = 7;
+
+/** Radial segments on the mantlet's raised boss. */
+const BOSS_SEGMENTS = 28;
 
 /**
  * The breech end: the ring, the falling block, and the recoil guard.

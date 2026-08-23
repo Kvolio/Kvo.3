@@ -25,7 +25,7 @@ All lengths in millimetres.
 | Driver's plate thickness | 100 | 100 | -0 | -0.0% | ±12 | ok | Jentz & Doyle |
 | Short glacis thickness | 60 | 60 | -0 | -0.0% | ±12 | ok | Jentz & Doyle |
 | Nose plate rake from vertical | 25 | 25 | -0 | -0.0% | ±1.5 | ok | Jentz & Doyle; measured off the built face |
-| Driver's plate rake from vertical | 9 | 9 | -0 | -0.0% | ±1.5 | ok | Jentz & Doyle; measured off the built face |
+| Driver's plate rake from vertical | 9 | 9 | +0 | +0.0% | ±1.5 | ok | Jentz & Doyle; measured off the built face |
 | Included angle at the front step | 146 | 146 | +0 | +0.0% | ±2 | ok | A continuous wedge would read 180 degrees here |
-| Roof plate front edge | 2524 | 2530 | +6 | +0.3% | ±30 | ok | derived from the driver plate; measured off the built roof |
-| Roof front edge, behind nose top | 670 | 634 | -36 | -5.3% | ±130 | ok | REF-drawing, measured at 20.3 mm/px |
+| Roof plate front edge | 2426 | 2430 | +4 | +0.1% | ±30 | ok | derived from the driver plate; measured off the built roof |
+| Roof front edge, behind nose top | 670 | 732 | +62 | +9.2% | ±130 | ok | REF-drawing, measured at 20.3 mm/px |

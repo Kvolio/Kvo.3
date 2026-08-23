@@ -39,7 +39,7 @@ export const TURRET = {
      * Overall external length of the turret, front plate to rear plate.
      * Measured off the 1:50 plan view.
      */
-    length: mm(2290),
+    length: mm(2312),
     /**
      * External width across the turret sides.
      *
@@ -50,7 +50,21 @@ export const TURRET = {
      * outboard of the bearing. `tests/spec/turretFit.test.ts` now asserts the
      * relationship so it cannot come back.
      */
-    width: mm(2170),
+    width: mm(2400),
+    /**
+     * How deep the rear bustle's curve is, front to back.
+     *
+     * The rear was DERIVED as a semicircle of exactly half the turret's width —
+     * an assumption, and a wrong one. Tracing the plan view's outline column by
+     * column, the sides run straight to about z = -904 and the curve then closes
+     * in 573 mm, not the 1,085 mm a semicircle would take. The bustle is
+     * markedly blunter than a half-round, which is what the owner objected to
+     * and what the drawing plainly shows.
+     *
+     * Modelled as an elliptical quarter each side: full width where the curve
+     * starts, meeting on the centreline `bustleRun` later.
+     */
+    bustleRun: mm(573),
     /** Height from the ring plane to the underside of the roof plate. */
     interiorHeight: mm(830),
     /**
@@ -93,10 +107,26 @@ export const TURRET = {
    * date markers on the whole vehicle, and it is why they are counted here.
    */
   mantlet: {
-    width: mm(1300),
-    height: mm(550),
-    /** How far the casting stands proud of the front plate. */
-    proud: mm(200),
+    /**
+     * The cast mantlet, measured off the front elevation at 19.3 mm/px.
+     *
+     * It is a CASTING, not a plate, and the difference is the whole character
+     * of a Tiger's face: a broad slab with heavily rounded ends, carrying a
+     * raised circular boss around the gun tube that is more than half the
+     * mantlet's own height. Built as an extruded rectangle it reads as a panel
+     * bolted on, which is what the owner correctly objected to.
+     */
+    width: mm(1412),
+    height: mm(567),
+    /** Corner radius of the slab. Generous: this is sand-cast, not flame-cut. */
+    cornerRadius: mm(170),
+    /** How far the slab stands proud of the front plate. */
+    proud: mm(150),
+    /** The raised boss around the tube, and how far it stands proud again. */
+    bossDiameter: mm(707),
+    bossProud: mm(130),
+    /** Rounding on the boss's rim, so it reads as cast rather than turned. */
+    bossFillet: mm(45),
     /** The opening cut in the front plate, behind the casting. */
     apertureWidth: mm(1000),
     apertureHeight: mm(480),
@@ -104,8 +134,23 @@ export const TURRET = {
     sightApertureDiameter: mm(60),
     /** Between the two sight apertures, centre to centre. */
     sightApertureSpacing: mm(140),
-    /** Sight cluster offset from the bore, to the gunner's side. */
-    sightOffsetX: mm(330),
+    /**
+     * Sight cluster offset from the bore, to the gunner's side.
+     *
+     * The gunner sits to PORT, and the front elevation shows the pair of
+     * apertures on that side — screen right in a head-on view, since port is
+     * screen right there.
+     */
+    sightOffsetX: port(mm(330)),
+    /**
+     * The coaxial MG 34 port, on the loader's side.
+     *
+     * Missing entirely until now. It is a small round opening to starboard of
+     * the boss, and its absence is one of the things that made the mantlet read
+     * as a blank panel.
+     */
+    coaxPortDiameter: mm(110),
+    coaxOffsetX: starboard(mm(420)),
     /** Clearance between the mantlet's bore and the tube through it. */
     boreClearance: mm(25),
     /** Edge band on the casting, for the chipping shader. */
@@ -113,9 +158,18 @@ export const TURRET = {
   },
 
   loaderHatch: {
-    /** Long-hinge type. Changed to a short hinged version in March 1944. */
+    /**
+     * Long-hinge type. Changed to a short hinged version in March 1944.
+     *
+     * RECTANGULAR with rounded corners, not round. The plan view draws it
+     * plainly — a rounded oblong with its hinge on one long edge and two grab
+     * handles inside it — and it was built as a circle anyway, which is the
+     * kind of thing a critic who is not the builder catches immediately.
+     */
     type: 'long-hinge',
-    diameter: mm(560),
+    width: mm(560),
+    length: mm(620),
+    cornerRadius: mm(130),
     thickness: mm(25),
     openAngle: deg(100),
     centreX: starboard(mm(520)),
@@ -211,16 +265,22 @@ export const TURRET_REAR_OVERHANG: MM = mm(
   TURRET.shell.length - TURRET.shell.frontOverhang,
 );
 
-/** Radius of the horseshoe's rear curve: the turret's rear IS a semicircle. */
-export const TURRET_REAR_RADIUS: MM = mm(TURRET.shell.width / 2);
-
-/** Where that semicircle's centre sits, in turret-local Z. */
-export const TURRET_REAR_ARC_Z: MM = mm(-(TURRET_REAR_OVERHANG - TURRET_REAR_RADIUS));
+/**
+ * Where the bustle's curve begins, in turret-local Z.
+ *
+ * Everything forward of this is straight-sided; everything aft closes in over
+ * `bustleRun`. Derived from the overhang and the run so the two cannot disagree
+ * about where the turret ends.
+ */
+export const TURRET_BUSTLE_START_Z: MM = mm(
+  -(TURRET_REAR_OVERHANG - TURRET.shell.bustleRun),
+);
 
 const MEASURED_FRONT =
-  'REF-drawing front elevation, measured: the mantlet reads as a raised central ' +
-  'casting on the turret front, scaled on the width over tracks. Good to about ' +
-  '150 mm, hence the tolerances.';
+  'REF-drawing front elevation, measured at 19.3 mm/px on the width over tracks. ' +
+  'The turret front was enlarged nine times before reading, which resolves the ' +
+  'mantlet slab, its raised boss, the two sight apertures and the coaxial port ' +
+  'as separate features rather than one grey mass.';
 
 const MEASURED_PLAN =
   'REF-drawing plan view, measured: the turret outline scanned column by column ' +
@@ -250,8 +310,9 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     centreZ: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   shell: {
-    length: { tol: 150, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
-    width: { tol: 150, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    length: { tol: 110, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    width: { tol: 110, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    bustleRun: { tol: 80, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     frontOverhang: { tol: 120, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     interiorHeight: {
       tol: 30,
@@ -274,9 +335,15 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     centreZ: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   mantlet: {
-    width: { tol: 150, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
-    height: { tol: 120, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
-    proud: { tol: 80, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    width: { tol: 90, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    height: { tol: 70, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    cornerRadius: { tol: 60, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    bossDiameter: { tol: 70, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    bossProud: { tol: 50, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    bossFillet: { tol: 20, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    coaxPortDiameter: { tol: 25, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    coaxOffsetX: { tol: 90, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    proud: { tol: 60, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
     apertureWidth: { tol: 120, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
     apertureHeight: { tol: 100, source: MEASURED_FRONT, confidence: 'estimated', note: DRAWING_ESTIMATE },
     sightApertures: { tol: 0, source: 'TIC-changes: TZF 9b is binocular until Mar 1944', confidence: 'secondary' },
@@ -287,7 +354,9 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     sightOffsetX: { tol: 80, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   loaderHatch: {
-    diameter: { tol: 25, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    width: { tol: 60, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    length: { tol: 60, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    cornerRadius: { tol: 40, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     thickness: { tol: 5, source: 'matches turret roof thickness', confidence: 'estimated', note: DRAWING_ESTIMATE },
     openAngle: { tol: 10, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
     centreX: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING_ESTIMATE },

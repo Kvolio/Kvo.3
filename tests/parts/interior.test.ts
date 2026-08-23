@@ -72,6 +72,10 @@ describe('interior', () => {
     // the centreline between the two forward stations. This asserts the general
     // case rather than that one instance.
     for (const device of VISION_DEVICES) {
+      // A BORE has a gun in it, by definition — the hull machine gun's barrel
+      // runs down its own aperture and is supposed to. Only the ports a crewman
+      // looks through have to be clear.
+      if (device.shape === 'bore') continue;
       const eye = new Vector3(S(device.eye[0]), S(device.eye[1]), S(device.eye[2]));
       const dir = new Vector3(...device.viewDirection).normalize();
       const blocked = measureThicknessAlong(geometry, eye, dir, S(mm(400)));

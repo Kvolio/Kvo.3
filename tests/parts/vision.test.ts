@@ -36,6 +36,12 @@ const BESIDE_OFFSET = 40;
 /** How far outside a surface a probe starts, so it is unambiguously outside. */
 const STANDOFF = 200;
 
+/** How many laminated layers an aperture's armour may be built from. */
+const MAX_ARMOUR_LAYERS = 6;
+
+/** How far past the expected depth to keep walking crossings. */
+const DEPTH_WINDOW = 1.25;
+
 const eyeOf = (d: VisionDevice): Vector3 =>
   new Vector3(S(d.eye[0]), S(d.eye[1]), S(d.eye[2]));
 
@@ -106,6 +112,7 @@ describe.each(VISION_DEVICES)('vision device: $label', (device) => {
   const { up, lateral } = axesOf(device);
 
   it('can be seen through at all', () => {
+    if (device.purpose !== 'vision') return;
     // The single most important assertion here. A port modelled as a recess
     // rather than an aperture blocks every ray, and looks perfectly convincing
     // from outside.
@@ -116,6 +123,7 @@ describe.each(VISION_DEVICES)('vision device: $label', (device) => {
   });
 
   it('is bounded by armour on both sides', () => {
+    if (device.purpose !== 'vision') return;
     // An opening with no edges is a missing plate, not a vision port.
     const base = new Vector3(...device.viewDirection).normalize();
     const wide = 40;
@@ -124,6 +132,7 @@ describe.each(VISION_DEVICES)('vision device: $label', (device) => {
   });
 
   it('gives the horizontal field of view its clear width implies', () => {
+    if (device.purpose !== 'vision') return;
     const measured = openWindowDegrees(device, up);
     const expected = fieldOfView(device).horizontal;
 
@@ -135,6 +144,7 @@ describe.each(VISION_DEVICES)('vision device: $label', (device) => {
   });
 
   it('gives the vertical field of view its clear height implies', () => {
+    if (device.purpose !== 'vision') return;
     const measured = openWindowDegrees(device, lateral);
     const expected = fieldOfView(device).vertical;
     expect(measured, `measured ${measured.toFixed(1)} deg vs expected ${expected.toFixed(1)}`)
@@ -143,6 +153,7 @@ describe.each(VISION_DEVICES)('vision device: $label', (device) => {
   });
 
   it('measures back to the clear opening in the specification', () => {
+    if (device.purpose !== 'vision') return;
     // The requirement is that the ports are to SCALE, so the check ends in
     // millimetres rather than degrees.
     const width = openingFromAngle(device, openWindowDegrees(device, up));
@@ -155,6 +166,10 @@ describe.each(VISION_DEVICES)('vision device: $label', (device) => {
   });
 
   it('is surrounded by armour of the full plate thickness', () => {
+    // A weapon port's surround is a ball in a collar, not a flat plate, and a
+    // ray fired beside it along the plate's normal grazes a sphere and measures
+    // a sliver. Those get their own check below.
+    if (device.purpose !== 'vision') return;
     // Fired alongside the aperture rather than through it: the plate the port is
     // cut into has to be solid armour right up to the rim, so a port cannot be
     // an opening in something that is itself hollow.
@@ -177,14 +192,29 @@ describe.each(VISION_DEVICES)('vision device: $label', (device) => {
     const toOuterFace = measureThicknessAlong(geometry, beside, aft, S(mm(600)));
     expect(toOuterFace, 'no armour beside the aperture').not.toBeNull();
 
-    const onOuterFace = beside.clone().addScaledVector(aft, toOuterFace! + 1e-5);
-    const throughPlate = measureThicknessAlong(geometry, onOuterFace, aft, S(mm(600)));
-    expect(throughPlate, 'the plate has an outer face but no inner one').not.toBeNull();
+    // Measure from the FIRST surface to the LAST one within the expected depth.
+    //
+    // A vision port's armour is not always one plate. The driver's visor is a
+    // 70 mm housing bolted to the face of a 100 mm plate; their touching faces
+    // are coincident, so a ray crosses four surfaces and the first span alone
+    // reports 70 mm of armour where there are 170. Walking to the last crossing
+    // inside the expected depth handles one plate and a laminate identically,
+    // and needs no way to tell solid from air.
+    const window = S(mm(device.throughThickness * DEPTH_WINDOW));
+    let cursor = beside.clone().addScaledVector(aft, toOuterFace! + 1e-5);
+    let total = 0;
+    for (let i = 0; i < MAX_ARMOUR_LAYERS; i++) {
+      const span = measureThicknessAlong(geometry, cursor, aft, window - total);
+      if (span === null) break;
+      total += span;
+      cursor = cursor.clone().addScaledVector(aft, span + 1e-5);
+    }
 
+    expect(total, 'the plate has an outer face but no inner one').toBeGreaterThan(0);
     // Crossing a plate tilted 9 degrees from vertical along the Z axis, so the
     // path is slightly longer than the plate is thick.
-    expect(toMM(throughPlate!)).toBeGreaterThan(device.throughThickness * 0.95);
-    expect(toMM(throughPlate!)).toBeLessThan(device.throughThickness * 1.25);
+    expect(toMM(total)).toBeGreaterThan(device.throughThickness * 0.95);
+    expect(toMM(total)).toBeLessThan(device.throughThickness * 1.25);
   });
 });
 

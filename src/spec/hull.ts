@@ -55,7 +55,7 @@ export const HULL = {
    * the foot of the driver's front plate. Short, as its name says: this is the
    * step in the Tiger's front, not a deck.
    */
-  glacisRun: mm(550),
+  glacisRun: mm(650),
 
   /** Longitudinal extent of the sponson floor, which is also the roof of the track run. */
   sponsonFloorY: mm(1120),
@@ -141,18 +141,59 @@ export const HULL = {
   },
 
   /** Driver's visor (Fahrersehklappe) in the front plate, with its sliding shutter. */
+  /**
+   * Driver's visor — the Fahrersehklappe — with its sliding shutter.
+   *
+   * Not a bare slot in the plate. It is a RAISED ARMOURED HOUSING standing
+   * proud of the driver's front plate, with the shutter running in guides
+   * either side of it and dropping to close. The front elevation draws it as a
+   * distinct rectangular block; built as a plain aperture it reads as a letter
+   * box cut in a wall.
+   */
   driverVisor: {
     centreX: port(mm(560)),
     centreY: mm(1440),
     width: mm(280),
     height: mm(95),
     shutterThickness: mm(90),
+    /** The housing around the slot, and how far it stands off the plate. */
+    housingWidth: mm(460),
+    housingHeight: mm(300),
+    housingProud: mm(70),
+    housingCornerRadius: mm(35),
+    /** The shutter itself, sitting in its guides above the open slot. */
+    shutterWidth: mm(360),
+    shutterHeight: mm(150),
+    shutterProud: mm(45),
+    /** How far above the slot the shutter sits when the visor is open. */
+    shutterRaise: mm(130),
   },
 
   /** Hull machine gun ball mount, starboard side of the front plate. */
+  /**
+   * Hull machine gun — the Kugelblende ball mount.
+   *
+   * A SPHERICAL CASTING seated in the plate, not a round hole. The ball turns
+   * inside its collar to traverse and elevate the MG 34, and it stands well
+   * proud of the armour; both supplied photographs show it as the strongest
+   * shadow on the front of the tank.
+   */
   hullMGMount: {
     centreX: starboard(mm(560)),
     centreY: mm(1430),
+    /** The ball's own diameter, and how far its crown stands off the plate. */
+    ballDiameter: mm(340),
+    ballProud: mm(120),
+    /** The collar the ball seats in, standing proud of the plate around it. */
+    collarDiameter: mm(430),
+    collarProud: mm(45),
+    /** The MG barrel and its protective sleeve, through the ball. */
+    barrelDiameter: mm(60),
+    barrelLength: mm(320),
+    sleeveDiameter: mm(105),
+    sleeveLength: mm(150),
+    /** Wall of the MG barrel, so its bore is a hole and not a peg. */
+    barrelWall: mm(12),
     /**
      * The bore cut through the front plate. Smaller than the ball mount that
      * caps it, because the ball has to seat against armour rather than pass
@@ -420,6 +461,11 @@ const MEASURED_PLAN =
   'calibrated on the superstructure half-width, which the plan shows as a pair ' +
   'of straight lines and is therefore the crispest scale reference in the view.';
 
+const MEASURED_FRONT_ELEV =
+  'REF-drawing front elevation, enlarged nine times before reading: the visor ' +
+  'housing and the ball mount resolve as distinct raised castings rather than ' +
+  'as holes, which is what they are and what the model lacked.';
+
 const DRAWING =
   'Scaled from REF-drawing against the sourced 6316 mm hull length, 1780 mm roof height and ' +
   '470 mm ground clearance, and constrained to clear the 2100 mm turret ring.';
@@ -482,10 +528,27 @@ export const HULL_META: MetaOf<typeof HULL> = {
     width: { tol: 25, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     height: { tol: 15, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     shutterThickness: { tol: 15, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
+    housingWidth: { tol: 60, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    housingHeight: { tol: 50, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    housingProud: { tol: 30, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    housingCornerRadius: { tol: 20, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    shutterWidth: { tol: 50, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    shutterHeight: { tol: 40, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    shutterProud: { tol: 20, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    shutterRaise: { tol: 40, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
   },
   hullMGMount: {
     centreX: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     centreY: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
+    ballDiameter: { tol: 40, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    ballProud: { tol: 30, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    collarDiameter: { tol: 40, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    collarProud: { tol: 20, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    barrelDiameter: { tol: 15, source: 'MG 34 barrel sleeve', confidence: 'estimated', note: DRAWING },
+    barrelLength: { tol: 60, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    sleeveDiameter: { tol: 20, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    sleeveLength: { tol: 40, source: MEASURED_FRONT_ELEV, confidence: 'estimated', note: DRAWING },
+    barrelWall: { tol: 4, source: 'MG 34 barrel', confidence: 'estimated', note: DRAWING },
     apertureDiameter: { tol: 25, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
   },
   headlight: {

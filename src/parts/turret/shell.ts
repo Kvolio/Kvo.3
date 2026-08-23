@@ -1,15 +1,14 @@
 import { Vector2, Vector3 } from 'three';
 import { Region, WEAR } from '../../geom/attributes.js';
-import { circle, rect, translate, v2, type Poly2 } from '../../geom/poly2.js';
+import { circle, rect, roundedRect, translate, v2, type Poly2 } from '../../geom/poly2.js';
 import { emitRevolve } from '../../prims/lathe.js';
 import { S, mm, type MM } from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
 import { HULL } from '../../spec/hull.js';
 import {
   TURRET,
+  TURRET_BUSTLE_START_Z,
   TURRET_FRONT_PLATE_WIDTH,
-  TURRET_REAR_ARC_Z,
-  TURRET_REAR_RADIUS,
 } from '../../spec/turret.js';
 import { structuralPlate } from '../emit.js';
 import type { BuildContext, PartResult } from '../types.js';
@@ -30,11 +29,14 @@ import { facingForward, facingUp } from '../hull/frames.js';
  * became the escape hatch in December 1942.
  */
 
-/** Segments around the horseshoe's rear curve. */
-const REAR_ARC_SEGMENTS = 24;
+/** Segments around the bustle's curve. */
+const BUSTLE_SEGMENTS = 26;
 
 /** Segments on a circular aperture in the roof. */
 const APERTURE_SEGMENTS = 28;
+
+/** Segments around one rounded corner of the loader's hatch. */
+const HATCH_CORNER_SEGMENTS = 6;
 
 /** Turret-local Z of the front plate's outer face, in hull coordinates. */
 const FRONT_Z: MM = mm(TURRET.ring.centreZ + TURRET.shell.frontOverhang);
@@ -52,19 +54,22 @@ const WALL_TOP_Y: MM = mm(RING_Y + TURRET.shell.interiorHeight);
  */
 function horseshoe(outset: number): Poly2 {
   const halfWidth = TURRET.shell.width / 2 + outset;
-  const arcRadius = TURRET_REAR_RADIUS + outset;
-  const arcCentreZ = TURRET.ring.centreZ + TURRET_REAR_ARC_Z;
+  const run = TURRET.shell.bustleRun + outset;
+  const bustleZ = TURRET.ring.centreZ + TURRET_BUSTLE_START_Z;
 
   const pts: Vector2[] = [
     v2(mm(-halfWidth), mm(FRONT_Z + outset)),
     v2(mm(halfWidth), mm(FRONT_Z + outset)),
-    v2(mm(halfWidth), mm(arcCentreZ)),
+    v2(mm(halfWidth), mm(bustleZ)),
   ];
-  for (let i = 1; i < REAR_ARC_SEGMENTS; i++) {
-    const a = (i / REAR_ARC_SEGMENTS) * Math.PI;
-    pts.push(v2(mm(halfWidth * Math.cos(a)), mm(arcCentreZ - arcRadius * Math.sin(a))));
+  // An ELLIPTICAL quarter each side, not a semicircle: the bustle closes in
+  // 573 mm where a half-round of this width would take 1,085. Full width at
+  // t = 0, meeting on the centreline at t = 90 degrees.
+  for (let i = 1; i < BUSTLE_SEGMENTS; i++) {
+    const t = (i / BUSTLE_SEGMENTS) * Math.PI;
+    pts.push(v2(mm(halfWidth * Math.cos(t)), mm(bustleZ - run * Math.sin(t))));
   }
-  pts.push(v2(mm(-halfWidth), mm(arcCentreZ)));
+  pts.push(v2(mm(-halfWidth), mm(bustleZ)));
   return pts;
 }
 
@@ -131,10 +136,17 @@ function buildRoof(ctx: BuildContext): void {
         TURRET.cupola.centreZ,
         mm(TURRET.cupola.outerDiameter - TURRET.cupola.wallThickness * 2),
       ),
-      aperture(
+      // Rounded oblong, not a circle. The plan view draws the loader's hatch
+      // with its hinge on one long edge; it was built round for two iterations.
+      translate(
+        roundedRect(
+          TURRET.loaderHatch.width,
+          TURRET.loaderHatch.length,
+          TURRET.loaderHatch.cornerRadius,
+          HATCH_CORNER_SEGMENTS,
+        ),
         TURRET.loaderHatch.centreX,
-        TURRET.loaderHatch.centreZ,
-        TURRET.loaderHatch.diameter,
+        -(TURRET.ring.centreZ + TURRET.loaderHatch.centreZ),
       ),
     ],
     thickness: ARMOUR.turret.roof.thickness,

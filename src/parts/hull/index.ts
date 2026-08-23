@@ -6,6 +6,7 @@ import { buildLowerHull } from './lowerHull.js';
 import { buildSuperstructure } from './superstructure.js';
 import { buildRearFittings } from './rearFittings.js';
 import { buildFittings } from './fittings.js';
+import { buildVisionPorts } from './visionPorts.js';
 import { buildRunningGear } from '../running/suspension.js';
 import { buildTracks } from '../running/track.js';
 import { buildInteriorStructure } from '../interior/structure.js';
@@ -39,6 +40,7 @@ export function buildHullOnly(ctx: BuildContext): PartResult {
     buildSuperstructure(ctx),
     buildRearFittings(ctx),
     buildFittings(ctx),
+    buildVisionPorts(ctx),
     buildRunningGear(ctx),
     buildTracks(ctx),
     buildInteriorStructure(ctx),

@@ -1,4 +1,4 @@
-import { deg, mm, type DEG, type MM } from './units.js';
+import { R, deg, mm, type DEG, type MM } from './units.js';
 import type { MetaOf } from './meta.js';
 import { HULL, driverPlateInnerZ, driverPlateOuterZ } from './hull.js';
 import { TURRET } from './turret.js';
@@ -40,6 +40,17 @@ export interface VisionDevice {
   readonly throughThickness: MM;
   /** Round apertures are bores; rectangular ones are slits. */
   readonly shape: 'slit' | 'bore';
+  /**
+   * What the aperture is FOR.
+   *
+   * A crewman looks through a `vision` port, so it has to be clear and it has a
+   * field of view worth measuring. A `weapon` port has a gun in it — the hull
+   * machine gun's barrel runs down its own bore and is supposed to — so
+   * "can you see through it" is the wrong question and returns zero degrees no
+   * matter how correct the geometry is. The two shared one set of tests until
+   * the barrel was modelled and the difference stopped being academic.
+   */
+  readonly purpose: 'vision' | 'weapon';
 }
 
 /**
@@ -72,16 +83,27 @@ export const VISION_DEVICES: readonly VisionDevice[] = [
       HULL.driverVisor.centreY,
       mm(driverPlateInnerZ(HULL.driverVisor.centreY) - EYE_STANDOFF),
     ],
+    // The aperture's outer face is now the HOUSING's, not the plate's: the
+    // Fahrersehklappe stands 70 mm proud, so the slot is a 170 mm tunnel rather
+    // than a 100 mm one and the far rim binds the view that much sooner. The
+    // driver really does see less through a real visor than through a hole, and
+    // the measured field of view drops from 50 to 42 degrees accordingly.
     apertureCentre: [
       HULL.driverVisor.centreX,
       HULL.driverVisor.centreY,
-      driverPlateOuterZ(HULL.driverVisor.centreY),
+      mm(
+        driverPlateOuterZ(HULL.driverVisor.centreY) +
+          HULL.driverVisor.housingProud * Math.cos(R(ARMOUR.hull.driverPlate.angle)),
+      ),
     ],
     clearWidth: HULL.driverVisor.width,
     clearHeight: HULL.driverVisor.height,
     viewDirection: [0, 0, 1],
-    throughThickness: ARMOUR.hull.driverPlate.thickness,
+    throughThickness: mm(
+      ARMOUR.hull.driverPlate.thickness + HULL.driverVisor.housingProud,
+    ),
     shape: 'slit',
+    purpose: 'vision',
   },
   {
     id: 'hull-mg-bore',
@@ -92,16 +114,23 @@ export const VISION_DEVICES: readonly VisionDevice[] = [
       HULL.hullMGMount.centreY,
       mm(driverPlateInnerZ(HULL.hullMGMount.centreY) - EYE_STANDOFF),
     ],
+    // Likewise the ball mount: the bore's outer face is the ball's crown.
     apertureCentre: [
       HULL.hullMGMount.centreX,
       HULL.hullMGMount.centreY,
-      driverPlateOuterZ(HULL.hullMGMount.centreY),
+      mm(
+        driverPlateOuterZ(HULL.hullMGMount.centreY) +
+          HULL.hullMGMount.ballProud * Math.cos(R(ARMOUR.hull.driverPlate.angle)),
+      ),
     ],
     clearWidth: HULL.hullMGMount.apertureDiameter,
     clearHeight: HULL.hullMGMount.apertureDiameter,
     viewDirection: [0, 0, 1],
-    throughThickness: ARMOUR.hull.driverPlate.thickness,
+    throughThickness: mm(
+      ARMOUR.hull.driverPlate.thickness + HULL.hullMGMount.ballProud,
+    ),
     shape: 'bore',
+    purpose: 'weapon',
   },
   ...cupolaSlits(),
 ];
@@ -150,6 +179,7 @@ function cupolaSlits(): VisionDevice[] {
       viewDirection: [dx, 0, dz],
       throughThickness: mm(outer - inner),
       shape: 'slit',
+      purpose: 'vision',
     };
   });
 }
