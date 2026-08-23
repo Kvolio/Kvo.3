@@ -231,8 +231,14 @@ front face 600 mm tall.
 
 Ordered. Nothing below is optional.
 
-1. Reinstate interlocking teeth at every plate joint, authored against a shared
-   joint line so both mating plates agree (finding 1.3).
+1. ~~Reinstate interlocking teeth at every plate joint~~ — **deferred to the
+   Stage 9 detail pass**, under acceptance criterion **R2**: *"try your best to
+   detail the tank, AFTER youve finished everything"*. Verzahnung is a joint
+   detail visible on close inspection, which is the category R2 defers. It stays
+   a Major finding and stays open; it is the ordering that changes, not the
+   requirement. The mechanism is a tenon-and-mortise pair — the side wall's
+   teeth pass through mortises cut in the nose plate — and both halves must be
+   generated from one shared joint definition so they cannot drift.
 2. Hatch lids for the driver, radio operator and engine deck, on real hinges
    wired to dynamic collision (2.5).
 3. Track guards with the January 1943 triangular ends, tow points, dual Bosch
