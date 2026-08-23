@@ -1,5 +1,5 @@
 import { DataTexture, RGBAFormat, RepeatWrapping, UnsignedByteType, LinearMipmapLinearFilter, LinearFilter } from 'three';
-import { fbm2, noise2, worley2 } from '../geom/noise.js';
+import { fbm2Tiled, noise2Tiled, worley2Tiled } from '../geom/noise.js';
 
 /**
  * The one texture this project ships — and it is generated, not loaded.
@@ -30,13 +30,16 @@ export function createNoiseAtlas(opts: NoiseAtlasOptions = {}): DataTexture {
   const { size = 512, seed = 20430218 } = opts;
   const data = new Uint8Array(size * size * 4);
 
-  // Frequencies are chosen so each channel tiles seamlessly at `size`: the
-  // noise functions are lattice based, so an integer number of cells across the
-  // texture wraps without a seam.
+  // Every channel uses a tileable generator whose lattice wraps at its cell
+  // count. Without that the atlas is discontinuous at its edges, and since it is
+  // sampled triplanar and repeats every few centimetres, the discontinuity shows
+  // up on the model as a regular grid of seams across every flat surface.
   const FBM_CELLS = 8;
   const GRAD_CELLS = 64;
   const WORLEY_CELLS = 24;
   const STREAK_CELLS = 96;
+  // Very low frequency along the streak direction, so the field is directional.
+  const STREAK_PERIOD = 3;
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -44,13 +47,19 @@ export function createNoiseAtlas(opts: NoiseAtlasOptions = {}): DataTexture {
       const v = y / size;
       const i = (y * size + x) * 4;
 
-      const broad = fbm2(u * FBM_CELLS, v * FBM_CELLS, 5, seed);
-      const micro = noise2(u * GRAD_CELLS, v * GRAD_CELLS, seed + 811);
-      const cell = worley2(u * WORLEY_CELLS, v * WORLEY_CELLS, seed + 2237);
+      const broad = fbm2Tiled(u * FBM_CELLS, v * FBM_CELLS, FBM_CELLS, 5, seed);
+      const micro = noise2Tiled(u * GRAD_CELLS, v * GRAD_CELLS, GRAD_CELLS, seed + 811);
+      const cell = worley2Tiled(u * WORLEY_CELLS, v * WORLEY_CELLS, WORLEY_CELLS, seed + 2237);
 
       // Streaks: high frequency across, very low frequency along, so the field
       // is directional rather than isotropic.
-      const streak = noise2(u * STREAK_CELLS, v * 3, seed + 5051);
+      const streak = noise2Tiled(
+        u * STREAK_CELLS,
+        v * STREAK_PERIOD,
+        STREAK_CELLS,
+        seed + 5051,
+        STREAK_PERIOD,
+      );
 
       data[i] = Math.round(broad * 255);
       data[i + 1] = Math.round(micro * 255);

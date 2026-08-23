@@ -39,6 +39,37 @@ describe('noise atlas', () => {
     }
   });
 
+  it('tiles seamlessly, so flat surfaces do not show a grid of seams', () => {
+    // The atlas is sampled triplanar in world space and repeats every few
+    // centimetres. A discontinuity at its edge therefore does not appear as one
+    // seam; it appears as a regular grid across every flat surface on the
+    // vehicle, which is what the sponson sides were showing.
+    const size = 128;
+    const data = createNoiseAtlas({ size, seed: 11 }).image.data as Uint8Array;
+    const at = (x: number, y: number, channel: number): number =>
+      data[((y % size) * size + (x % size)) * 4 + channel]!;
+
+    for (let channel = 0; channel < 4; channel++) {
+      let worstColumn = 0;
+      let worstRow = 0;
+      for (let i = 0; i < size; i++) {
+        // The wrap edges must be as continuous as any interior neighbour pair.
+        worstColumn = Math.max(worstColumn, Math.abs(at(size - 1, i, channel) - at(0, i, channel)));
+        worstRow = Math.max(worstRow, Math.abs(at(i, size - 1, channel) - at(i, 0, channel)));
+      }
+
+      let interior = 0;
+      for (let i = 0; i < size; i++) {
+        for (let x = 1; x < size - 1; x += 7) {
+          interior = Math.max(interior, Math.abs(at(x, i, channel) - at(x + 1, i, channel)));
+        }
+      }
+
+      expect(worstColumn, `channel ${channel} vertical seam`).toBeLessThanOrEqual(interior);
+      expect(worstRow, `channel ${channel} horizontal seam`).toBeLessThanOrEqual(interior);
+    }
+  });
+
   it('stays small enough to be free on a phone', () => {
     const atlas = createNoiseAtlas({ size: 512 });
     const bytes = (atlas.image.data as Uint8Array).byteLength;

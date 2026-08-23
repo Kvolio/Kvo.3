@@ -3,8 +3,9 @@ import { FastenerRegistry } from '../../prims/fastener.js';
 import { AusfH_Feb1943, type VariantConfig } from '../../spec/variants.js';
 import { combineParts, type BuildContext, type PartResult } from '../types.js';
 import { buildLowerHull } from './lowerHull.js';
+import { buildSuperstructure } from './superstructure.js';
 
-export { buildLowerHull };
+export { buildLowerHull, buildSuperstructure };
 
 /**
  * Normals smooth across joints shallower than this and stay hard beyond it.
@@ -17,7 +18,7 @@ const COLLISION_SMOOTHING_DEGREES = 60;
 
 /** Assemble the hull. */
 export function buildHull(ctx: BuildContext): PartResult {
-  return combineParts('hull', [buildLowerHull(ctx)]);
+  return combineParts('hull', [buildLowerHull(ctx), buildSuperstructure(ctx)]);
 }
 
 export interface BuiltAssembly {

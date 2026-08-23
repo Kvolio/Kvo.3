@@ -8,7 +8,14 @@ import { emitWeld } from '../../src/prims/weld.js';
 import { FastenerRegistry, buildFastenerGeometry } from '../../src/prims/fastener.js';
 import { circle } from '../../src/geom/poly2.js';
 import { Region } from '../../src/geom/attributes.js';
-import { noise1, worley2, makeRandom } from '../../src/geom/noise.js';
+import {
+  noise1,
+  worley2,
+  makeRandom,
+  noise2Tiled,
+  fbm2Tiled,
+  worley2Tiled,
+} from '../../src/geom/noise.js';
 
 const finish = (mb: MeshBuilder) => {
   mb.weldVertices();
@@ -235,6 +242,18 @@ describe('noise', () => {
     const a = makeRandom(42);
     const b = makeRandom(42);
     for (let i = 0; i < 10; i++) expect(a()).toBe(b());
+  });
+
+  it('repeats exactly at the period it is given', () => {
+    const PERIOD = 8;
+    for (let i = 0; i < 40; i++) {
+      const x = i * 0.31;
+      const y = i * 0.47;
+      expect(noise2Tiled(x, y, PERIOD, 3)).toBeCloseTo(noise2Tiled(x + PERIOD, y, PERIOD, 3), 10);
+      expect(noise2Tiled(x, y, PERIOD, 3)).toBeCloseTo(noise2Tiled(x, y + PERIOD, PERIOD, 3), 10);
+      expect(fbm2Tiled(x, y, PERIOD, 4, 5)).toBeCloseTo(fbm2Tiled(x + PERIOD, y, PERIOD, 4, 5), 10);
+      expect(worley2Tiled(x, y, PERIOD, 7)).toBeCloseTo(worley2Tiled(x + PERIOD, y, PERIOD, 7), 10);
+    }
   });
 
   it('stays inside the unit range it promises', () => {

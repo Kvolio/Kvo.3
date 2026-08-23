@@ -37,6 +37,15 @@ export const toMM = (v: number): MM => mm(v * MM_PER_SCENE_UNIT);
 /** Convert a spec angle to radians. */
 export const R = (v: DEG): number => (v * Math.PI) / 180;
 
+/**
+ * Convert an angle quoted FROM VERTICAL, as German documentation quotes plate
+ * angles, into one measured from horizontal.
+ *
+ * A plate at 80 degrees from vertical is 10 degrees above horizontal — nearly
+ * flat — and mixing the two conventions turns a front deck into a windscreen.
+ */
+export const fromHorizontal = (v: DEG): DEG => deg(90 - v);
+
 /** Convert radians back to spec degrees. */
 export const toDEG = (v: number): DEG => deg((v * 180) / Math.PI);
 
