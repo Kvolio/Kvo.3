@@ -19,8 +19,24 @@ export const ARMOUR = {
     nose: { thickness: mm(100), angle: deg(25) },
     /** Driver's front plate, carrying the visor and the hull MG ball mount. */
     driverPlate: { thickness: mm(100), angle: deg(9) },
-    /** Upper glacis, sloping back over the driver's compartment. */
-    upperGlacis: { thickness: mm(60), angle: deg(80) },
+    /**
+     * The SHORT GLACIS: the near-horizontal plate between the nose plate and
+     * the driver's front plate.
+     *
+     * Its position was got wrong once and is worth stating plainly. At 80
+     * degrees from vertical this is 10 degrees ABOVE HORIZONTAL — a shallow
+     * step, not a roof. It is not the deck over the driver's compartment; that
+     * is the 25 mm hull roof. Jentz & Doyle describe the front as "a lower
+     * front hull plate 100 mm thick, a short glacis 60 mm thick and a reclined
+     * driver's plate 100 mm thick", in that order, and tiger1.info describes
+     * this plate as welded above and below to the superstructure front plate
+     * with a tab hammered through it from below — which only a near-horizontal
+     * plate meeting a vertical one can be.
+     *
+     * Modelling the front without it produces a single continuous wedge from
+     * the belly to the driver's plate, which is what the first attempt did.
+     */
+    shortGlacis: { thickness: mm(60), angle: deg(80) },
     /** Superstructure side, above the track run — the sponson outer wall. */
     sideUpper: { thickness: mm(80), angle: deg(0) },
     /** Lower hull side, behind the running gear. */
@@ -67,7 +83,7 @@ export const ARMOUR_META: MetaOf<typeof ARMOUR> = {
           'scaled from the drawing. Small, but it sets where the visor and MG mount sit.',
       },
     },
-    upperGlacis: {
+    shortGlacis: {
       thickness: { tol: 0, source: JENTZ, confidence: 'secondary' },
       angle: { tol: 2, source: JENTZ, confidence: 'secondary' },
     },

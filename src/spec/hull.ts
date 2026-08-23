@@ -1,4 +1,4 @@
-import { mm, deg, type MM } from './units.js';
+import { R, fromHorizontal, mm, deg, type MM } from './units.js';
 import type { MetaOf } from './meta.js';
 import { OVERALL } from './overall.js';
 import { ARMOUR } from './armour.js';
@@ -45,10 +45,17 @@ export const HULL = {
    */
   superstructureWidth: mm(3240),
 
-  /** Height at which the nose plate gives way to the driver's front plate. */
-  noseTopY: mm(1000),
-  /** Height at which the driver's front plate gives way to the upper glacis. */
-  driverPlateTopY: mm(1600),
+  /**
+   * Height at which the nose plate gives way to the short glacis. The top edge
+   * of the nose plate is the hull's foremost point.
+   */
+  noseTopY: mm(980),
+  /**
+   * Horizontal run of the short glacis, from the top of the nose plate back to
+   * the foot of the driver's front plate. Short, as its name says: this is the
+   * step in the Tiger's front, not a deck.
+   */
+  glacisRun: mm(400),
 
   /** Longitudinal extent of the sponson floor, which is also the roof of the track run. */
   sponsonFloorY: mm(1120),
@@ -189,28 +196,70 @@ export const SPONSON_DEPTH: MM = mm(SPONSON_HALF_WIDTH - LOWER_HALF_WIDTH);
  * The hull's longitudinal profile, as (z, y) pairs running clockwise from the
  * top of the nose. Used to build the side plates and to check the silhouette.
  */
-export function hullProfile(): readonly (readonly [MM, MM])[] {
-  const noseRun = (HULL.noseTopY - HULL.floorY) * Math.tan((ARMOUR.hull.nose.angle * Math.PI) / 180);
-  const driverRun =
-    (HULL.driverPlateTopY - HULL.noseTopY) *
-    Math.tan((ARMOUR.hull.driverPlate.angle * Math.PI) / 180);
-  const glacisRun =
-    (HULL.roofY - HULL.driverPlateTopY) /
-    Math.tan(((90 - ARMOUR.hull.upperGlacis.angle) * Math.PI) / 180);
-  const rearRun = (HULL.roofY - HULL.floorY) * Math.tan((ARMOUR.hull.rear.angle * Math.PI) / 180);
+/**
+ * Where the short glacis meets the driver's front plate. Derived: the glacis
+ * rises across its run at its own angle.
+ */
+export const DRIVER_PLATE_FOOT_Y: MM = mm(
+  HULL.noseTopY + HULL.glacisRun * Math.tan(R(fromHorizontal(ARMOUR.hull.shortGlacis.angle))),
+);
 
-  const noseTopZ = HULL.frontZ;
-  const driverTopZ = mm(noseTopZ - driverRun);
-  const glacisTopZ = mm(driverTopZ - glacisRun);
+/** Longitudinal position where the short glacis meets the driver's front plate. */
+export const GLACIS_HEAD_Z: MM = mm(HULL.frontZ - HULL.glacisRun);
+
+/** Outer face of the driver's front plate at a given height. */
+export function driverPlateOuterZ(y: MM): MM {
+  return mm(GLACIS_HEAD_Z - (y - DRIVER_PLATE_FOOT_Y) * Math.tan(R(ARMOUR.hull.driverPlate.angle)));
+}
+
+/** Outer face of the short glacis at a given longitudinal position. */
+export function glacisOuterY(z: MM): MM {
+  return mm(
+    HULL.noseTopY +
+      (HULL.frontZ - z) * Math.tan(R(fromHorizontal(ARMOUR.hull.shortGlacis.angle))),
+  );
+}
+
+/**
+ * Underside of the short glacis. What anything tucked beneath it — the lower
+ * hull side plates, the forward sponson structure — has to stop short of.
+ */
+export function glacisInnerY(z: MM): MM {
+  return mm(
+    glacisOuterY(z) -
+      ARMOUR.hull.shortGlacis.thickness * Math.sin(R(ARMOUR.hull.shortGlacis.angle)),
+  );
+}
+
+/** Inner face of the driver's front plate at a given height. */
+export function driverPlateInnerZ(y: MM): MM {
+  return mm(
+    driverPlateOuterZ(y) -
+      ARMOUR.hull.driverPlate.thickness / Math.cos(R(ARMOUR.hull.driverPlate.angle)),
+  );
+}
+
+/** Where the driver's front plate meets the hull roof. */
+export const DRIVER_PLATE_HEAD_Z: MM = driverPlateOuterZ(HULL.roofY);
+
+/**
+ * The hull's longitudinal profile, as (z, y) pairs running clockwise from the
+ * top of the nose. Used to build the side plates and to check the silhouette.
+ *
+ * The front is FOUR distinct planes, not one: nose, short glacis, driver's
+ * plate, roof. A profile with only three is the wedge fault.
+ */
+export function hullProfile(): readonly (readonly [MM, MM])[] {
+  const noseRun = (HULL.noseTopY - HULL.floorY) * Math.tan(R(ARMOUR.hull.nose.angle));
+  const rearRun = (HULL.roofY - HULL.floorY) * Math.tan(R(ARMOUR.hull.rear.angle));
 
   return [
-    [mm(noseTopZ), HULL.noseTopY],
-    [mm(driverTopZ), HULL.driverPlateTopY],
-    [mm(glacisTopZ), HULL.roofY],
-    // The rear plate leans back at the top, so the roof overhangs the tail.
+    [HULL.frontZ, HULL.noseTopY],
+    [GLACIS_HEAD_Z, DRIVER_PLATE_FOOT_Y],
+    [DRIVER_PLATE_HEAD_Z, HULL.roofY],
     [HULL.rearZ, HULL.roofY],
     [mm(HULL.rearZ + rearRun), HULL.floorY],
-    [mm(noseTopZ - noseRun), HULL.floorY],
+    [mm(HULL.frontZ - noseRun), HULL.floorY],
   ] as const;
 }
 
@@ -233,7 +282,7 @@ export const HULL_META: MetaOf<typeof HULL> = {
   },
   superstructureWidth: { tol: 60, source: 'REF-drawing front view', confidence: 'estimated', note: DRAWING },
   noseTopY: { tol: 60, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
-  driverPlateTopY: { tol: 60, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
+  glacisRun: { tol: 80, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING },
   sponsonFloorY: { tol: 50, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
   firewallZ: { tol: 80, source: 'REF-cutaway', confidence: 'estimated', note: DRAWING },
   driverHatch: {

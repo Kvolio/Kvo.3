@@ -180,8 +180,8 @@ describe('armour', () => {
     expect(SPEC.armour.hull.nose.thickness).toBe(100);
     expect(SPEC.armour.hull.nose.angle).toBe(25);
     expect(SPEC.armour.hull.driverPlate.thickness).toBe(100);
-    expect(SPEC.armour.hull.upperGlacis.thickness).toBe(60);
-    expect(SPEC.armour.hull.upperGlacis.angle).toBe(80);
+    expect(SPEC.armour.hull.shortGlacis.thickness).toBe(60);
+    expect(SPEC.armour.hull.shortGlacis.angle).toBe(80);
     expect(SPEC.armour.hull.rear.thickness).toBe(80);
     expect(SPEC.armour.hull.rear.angle).toBe(9);
     expect(SPEC.armour.hull.sideUpper.thickness).toBe(80);

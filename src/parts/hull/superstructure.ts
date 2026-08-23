@@ -1,9 +1,18 @@
 import { Vector3 } from 'three';
 import { Region, WEAR } from '../../geom/attributes.js';
 import { circle, rect, v2, type Poly2 } from '../../geom/poly2.js';
-import { R, S, fromHorizontal, mm, type MM } from '../../spec/units.js';
+import { R, S, mm, type DEG, type MM } from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
-import { HULL, LOWER_HALF_WIDTH, SPONSON_HALF_WIDTH } from '../../spec/hull.js';
+import {
+  DRIVER_PLATE_FOOT_Y,
+  DRIVER_PLATE_HEAD_Z,
+  GLACIS_HEAD_Z,
+  HULL,
+  LOWER_HALF_WIDTH,
+  SPONSON_HALF_WIDTH,
+  driverPlateInnerZ,
+  driverPlateOuterZ,
+} from '../../spec/hull.js';
 import { TURRET } from '../../spec/turret.js';
 import { structuralPlate, weldJoint } from '../emit.js';
 import type { BuildContext, PartResult } from '../types.js';
@@ -36,16 +45,6 @@ function sponsonFloorTop(): MM {
   return mm(HULL.sponsonFloorY + ARMOUR.hull.roof.thickness);
 }
 
-/** Inner face of the driver's front plate at a given height. */
-function driverPlateInnerZ(y: MM): MM {
-  const tilt = R(ARMOUR.hull.driverPlate.angle);
-  return mm(
-    HULL.frontZ -
-      (y - HULL.noseTopY) * Math.tan(tilt) -
-      ARMOUR.hull.driverPlate.thickness / Math.cos(tilt),
-  );
-}
-
 /** Inner face of the rear plate at a given height. */
 function rearPlateInnerZ(y: MM): MM {
   const tilt = R(ARMOUR.hull.rear.angle);
@@ -56,46 +55,9 @@ function rearPlateInnerZ(y: MM): MM {
   );
 }
 
-/** Where the upper glacis meets the driver's front plate, on the outer face. */
-function glacisOuterFoot(): { z: MM; y: MM } {
-  const tilt = R(ARMOUR.hull.driverPlate.angle);
-  return {
-    z: mm(HULL.frontZ - (HULL.driverPlateTopY - HULL.noseTopY) * Math.tan(tilt)),
-    y: HULL.driverPlateTopY,
-  };
-}
-
-/** Where the upper glacis meets the roof, on the outer face. */
-function glacisOuterHead(): { z: MM; y: MM } {
-  const foot = glacisOuterFoot();
-  const rise = HULL.roofY - HULL.driverPlateTopY;
-  // Quoted from vertical, so the run is rise / tan(90 - angle).
-  const run = rise / Math.tan(R(fromHorizontal(ARMOUR.hull.upperGlacis.angle)));
-  return { z: mm(foot.z - run), y: HULL.roofY };
-}
-
-/**
- * The glacis inner face, offset from the outer face along the plate normal.
- * Returned as its two endpoints, which is all the side profile needs.
- */
-function glacisInnerFace(): { foot: { z: MM; y: MM }; head: { z: MM; y: MM } } {
-  const tilt = R(ARMOUR.hull.upperGlacis.angle);
-  const t = ARMOUR.hull.upperGlacis.thickness;
-  // Outward normal points forward and up: (sin tilt in y, cos tilt in z).
-  const dz = -t * Math.cos(tilt);
-  const dy = -t * Math.sin(tilt);
-  const foot = glacisOuterFoot();
-  const head = glacisOuterHead();
-  return {
-    foot: { z: mm(foot.z + dz), y: mm(foot.y + dy) },
-    head: { z: mm(head.z + dz), y: mm(head.y + dy) },
-  };
-}
-
 /**
  * Segment counts for the circular apertures. A hatch rim the player can walk up
- * to needs more than a turret ring seen mostly from a distance, and the turret
- * ring is the largest circle on the vehicle.
+ * to needs more than a turret ring seen mostly from a distance.
  */
 const TURRET_RING_SEGMENTS = 48;
 const HATCH_SEGMENTS = 28;
@@ -108,6 +70,17 @@ const GRILLE_MARGIN = 55;
 /** How far a hatch lid overlaps the rim it seats on. */
 const HATCH_OVERLAP = 40;
 
+/**
+ * Outward normal of a plate quoted at an angle from vertical. `upward` picks
+ * between the two cases the Tiger's front needs: the nose leans back as it
+ * descends so its normal points forward and DOWN, while the glacis and the
+ * driver's plate lean back as they climb so theirs point forward and UP.
+ */
+function plateNormal(angleFromVertical: DEG, upward: boolean): Vector3 {
+  const t = R(angleFromVertical);
+  return new Vector3(0, (upward ? 1 : -1) * Math.sin(t), Math.cos(t));
+}
+
 export function buildSuperstructure(ctx: BuildContext): PartResult {
   const start = ctx.render.triangleCount;
   const frames = new Map<string, ReturnType<typeof facingUp>>();
@@ -116,36 +89,51 @@ export function buildSuperstructure(ctx: BuildContext): PartResult {
   const cos9 = Math.cos(R(tilt9));
   const floorTop = sponsonFloorTop();
   const roofInnerY = mm(HULL.roofY - ARMOUR.hull.roof.thickness);
-  const glacisHead = glacisOuterHead();
-  const glacisInner = glacisInnerFace();
+
+  // ---------------------------------------------------------------------------
+  // Short glacis
+  //
+  // The step between the nose plate and the driver's front plate, and the plate
+  // whose absence made the whole front read as one wedge. At 80 degrees from
+  // vertical it lies 10 degrees above horizontal: shallow, but a distinct plane
+  // with its own thickness and its own two weld seams.
+  //
+  // It runs the full superstructure width while the nose beneath it is only as
+  // wide as the lower hull, so it also forms the forward overhang of the
+  // sponsons — which is what the track guards hang from.
+  // ---------------------------------------------------------------------------
+  const glacisSlant = Math.hypot(HULL.glacisRun, DRIVER_PLATE_FOOT_Y - HULL.noseTopY);
+
+  structuralPlate(ctx, {
+    outline: rect(HULL.superstructureWidth, mm(glacisSlant)),
+    thickness: ARMOUR.hull.shortGlacis.thickness,
+    frame: facingUpForward(
+      mm((HULL.frontZ + GLACIS_HEAD_Z) / 2),
+      mm((HULL.noseTopY + DRIVER_PLATE_FOOT_Y) / 2),
+      ARMOUR.hull.shortGlacis.angle,
+    ),
+    chamfer: HULL.chamfer.structural,
+    region: Region.Exterior,
+    materials: { inner: 'interiorIvoryPaint' },
+    // Crews stood on the front step to reach the driver's hatch.
+    wear: WEAR.footTraffic,
+  });
 
   // ---------------------------------------------------------------------------
   // Driver's front plate
   //
-  // Stepped: only as wide as the lower hull below the sponson floor, full
-  // superstructure width above it. Carries the driver's visor and the hull MG
-  // bore as holes cut clean through 100 mm of armour.
+  // Full superstructure width for its whole height, because the glacis beneath
+  // it is already full width. Carries the driver's visor and the hull MG bore as
+  // holes cut clean through 100 mm of armour.
   // ---------------------------------------------------------------------------
-  const dpCentreY = mm((HULL.noseTopY + HULL.driverPlateTopY) / 2);
-  const dpCentreZ = mm(HULL.frontZ - (dpCentreY - HULL.noseTopY) * Math.tan(R(tilt9)));
+  const dpCentreY = mm((DRIVER_PLATE_FOOT_Y + HULL.roofY) / 2);
+  const dpCentreZ = driverPlateOuterZ(dpCentreY);
   const localY = (worldY: MM): number => (worldY - dpCentreY) / cos9;
 
-  const dpBottom = localY(HULL.noseTopY);
-  const dpTop = localY(HULL.driverPlateTopY);
-  const dpStep = localY(HULL.sponsonFloorY);
-  const halfLower = LOWER_HALF_WIDTH;
-  const halfUpper = SPONSON_HALF_WIDTH;
-
-  const driverPlateOutline: Poly2 = [
-    v2(-halfLower, dpBottom),
-    v2(halfLower, dpBottom),
-    v2(halfLower, dpStep),
-    v2(halfUpper, dpStep),
-    v2(halfUpper, dpTop),
-    v2(-halfUpper, dpTop),
-    v2(-halfUpper, dpStep),
-    v2(-halfLower, dpStep),
-  ];
+  const driverPlateOutline: Poly2 = rect(
+    HULL.superstructureWidth,
+    mm((HULL.roofY - DRIVER_PLATE_FOOT_Y) / cos9),
+  );
 
   const visorHole: Poly2 = translate(
     rect(HULL.driverVisor.width, mm(HULL.driverVisor.height / cos9)),
@@ -169,34 +157,13 @@ export function buildSuperstructure(ctx: BuildContext): PartResult {
   });
 
   // ---------------------------------------------------------------------------
-  // Upper glacis
-  // ---------------------------------------------------------------------------
-  const glacisFoot = glacisOuterFoot();
-  const glacisSlant = Math.hypot(glacisHead.z - glacisFoot.z, glacisHead.y - glacisFoot.y);
-
-  structuralPlate(ctx, {
-    outline: rect(HULL.superstructureWidth, mm(glacisSlant)),
-    thickness: ARMOUR.hull.upperGlacis.thickness,
-    frame: facingUpForward(
-      mm((glacisFoot.z + glacisHead.z) / 2),
-      mm((glacisFoot.y + glacisHead.y) / 2),
-      ARMOUR.hull.upperGlacis.angle,
-    ),
-    chamfer: HULL.chamfer.structural,
-    region: Region.Exterior,
-    materials: { inner: 'interiorIvoryPaint' },
-    // Crews walked on the front deck constantly.
-    wear: WEAR.footTraffic,
-  });
-
-  // ---------------------------------------------------------------------------
   // Roof and engine deck
   //
   // One plate from the glacis to the tail, with the turret ring and the two
   // forward hatches cut through it. Local Y runs aft-negative, so world z maps
   // to -localY.
   // ---------------------------------------------------------------------------
-  const roofFrontZ = glacisHead.z;
+  const roofFrontZ = DRIVER_PLATE_HEAD_Z;
   const roofRearZ = HULL.rearZ;
   const roofLength = mm(roofFrontZ - roofRearZ);
   const roofCentreZ = mm((roofFrontZ + roofRearZ) / 2);
@@ -343,13 +310,15 @@ export function buildSuperstructure(ctx: BuildContext): PartResult {
   // glacis, so the plate closes the sponson without pushing into either.
   // ---------------------------------------------------------------------------
   const superSideProfile: Poly2 = [
-    v2(driverPlateInnerZ(floorTop), floorTop),
-    v2(driverPlateInnerZ(HULL.driverPlateTopY), HULL.driverPlateTopY),
-    v2(glacisInner.foot.z, HULL.driverPlateTopY),
-    v2(glacisInner.head.z, glacisInner.head.y),
-    v2(glacisInner.head.z, roofInnerY),
+    // Front edge, bottom to top: the driver's plate is now a single straight
+    // run, so this no longer has to pick its way around a glacis overhead.
+    v2(driverPlateInnerZ(DRIVER_PLATE_FOOT_Y), DRIVER_PLATE_FOOT_Y),
+    v2(driverPlateInnerZ(roofInnerY), roofInnerY),
     v2(rearPlateInnerZ(roofInnerY), roofInnerY),
     v2(rearPlateInnerZ(floorTop), floorTop),
+    // Forward along the underside of the sponson floor, then down the short lip
+    // that carries the sponson's forward overhang onto the glacis.
+    v2(driverPlateInnerZ(floorTop), floorTop),
   ];
 
   for (const side of ['left', 'right'] as const) {
@@ -367,11 +336,44 @@ export function buildSuperstructure(ctx: BuildContext): PartResult {
   // Welds along the superstructure's long joints
   // ---------------------------------------------------------------------------
   const half = S(SPONSON_HALF_WIDTH);
+  const halfNose = S(LOWER_HALF_WIDTH);
   const up = new Vector3(0, 1, 0);
-  const glacisNormal = new Vector3(
-    0,
-    Math.sin(R(ARMOUR.hull.upperGlacis.angle)),
-    Math.cos(R(ARMOUR.hull.upperGlacis.angle)),
+
+  const noseNormal = plateNormal(ARMOUR.hull.nose.angle, false);
+  const glacisNormal = plateNormal(ARMOUR.hull.shortGlacis.angle, true);
+  const driverNormal = plateNormal(ARMOUR.hull.driverPlate.angle, true);
+
+  // The three seams that make the front three planes rather than one. If any of
+  // these disappears, so has the plate it joins.
+  weldJoint(
+    ctx,
+    [
+      new Vector3(-halfNose, S(HULL.noseTopY), S(HULL.frontZ)),
+      new Vector3(halfNose, S(HULL.noseTopY), S(HULL.frontZ)),
+    ],
+    noseNormal,
+    glacisNormal,
+    'fillet-12',
+  );
+  weldJoint(
+    ctx,
+    [
+      new Vector3(-half, S(DRIVER_PLATE_FOOT_Y), S(GLACIS_HEAD_Z)),
+      new Vector3(half, S(DRIVER_PLATE_FOOT_Y), S(GLACIS_HEAD_Z)),
+    ],
+    glacisNormal,
+    driverNormal,
+    'fillet-12',
+  );
+  weldJoint(
+    ctx,
+    [
+      new Vector3(-half, S(HULL.roofY), S(roofFrontZ)),
+      new Vector3(half, S(HULL.roofY), S(roofFrontZ)),
+    ],
+    driverNormal,
+    up,
+    'fillet-8',
   );
 
   for (const side of ['left', 'right'] as const) {
@@ -387,30 +389,30 @@ export function buildSuperstructure(ctx: BuildContext): PartResult {
       'fillet-8',
     );
 
-    // Glacis to superstructure side.
+    // Driver's plate to superstructure side.
     weldJoint(
       ctx,
       [
-        new Vector3(x, S(glacisFoot.y), S(glacisFoot.z)),
-        new Vector3(x, S(glacisHead.y), S(glacisHead.z)),
+        new Vector3(x, S(DRIVER_PLATE_FOOT_Y), S(GLACIS_HEAD_Z)),
+        new Vector3(x, S(HULL.roofY), S(roofFrontZ)),
+      ],
+      driverNormal,
+      outward,
+      'fillet-8',
+    );
+
+    // Glacis to superstructure side, along the forward sponson overhang.
+    weldJoint(
+      ctx,
+      [
+        new Vector3(x, S(HULL.noseTopY), S(HULL.frontZ)),
+        new Vector3(x, S(DRIVER_PLATE_FOOT_Y), S(GLACIS_HEAD_Z)),
       ],
       glacisNormal,
       outward,
       'fillet-8',
     );
   }
-
-  // Glacis to roof, across the vehicle.
-  weldJoint(
-    ctx,
-    [
-      new Vector3(-half, S(HULL.roofY), S(roofFrontZ)),
-      new Vector3(half, S(HULL.roofY), S(roofFrontZ)),
-    ],
-    glacisNormal,
-    up,
-    'fillet-8',
-  );
 
   frames.set('turretRing', facingUp(HULL.roofY));
 

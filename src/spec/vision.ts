@@ -1,6 +1,6 @@
 import { deg, mm, type DEG, type MM } from './units.js';
 import type { MetaOf } from './meta.js';
-import { HULL } from './hull.js';
+import { HULL, driverPlateInnerZ, driverPlateOuterZ } from './hull.js';
 import { TURRET } from './turret.js';
 import { ARMOUR } from './armour.js';
 
@@ -50,15 +50,33 @@ export interface VisionDevice {
  * vehicle, which is exactly why an aperture that stops at the outer face would
  * be so obvious from inside.
  */
+/**
+ * How far behind the plate's inner face a crewman's eye sits when he is using a
+ * device. A driver at the visor has his face close to it, and that distance is
+ * what sets the field of view — so it is stated once here rather than baked
+ * into each device's coordinates.
+ */
+const EYE_STANDOFF = mm(200);
+
 export const VISION_DEVICES: readonly VisionDevice[] = [
   {
     id: 'driver-visor',
     label: "Driver's visor",
     station: 'driver',
-    // Roughly 200 mm behind the plate's inner face: a driver at the visor has
-    // his face close to it, and the distance is what sets the field of view.
-    eye: [mm(-560), mm(1420), mm(2790)],
-    apertureCentre: [HULL.driverVisor.centreX, HULL.driverVisor.centreY, mm(3088)],
+    // Derived from the plate the aperture is cut into, not hard-coded. When the
+    // driver's plate moved during the frontal rebuild, hard-coded coordinates
+    // left the driver's eye floating in front of the tank; the tests caught it,
+    // but deriving the position means the question cannot arise again.
+    eye: [
+      HULL.driverVisor.centreX,
+      HULL.driverVisor.centreY,
+      mm(driverPlateInnerZ(HULL.driverVisor.centreY) - EYE_STANDOFF),
+    ],
+    apertureCentre: [
+      HULL.driverVisor.centreX,
+      HULL.driverVisor.centreY,
+      driverPlateOuterZ(HULL.driverVisor.centreY),
+    ],
     clearWidth: HULL.driverVisor.width,
     clearHeight: HULL.driverVisor.height,
     viewDirection: [0, 0, 1],
@@ -69,8 +87,16 @@ export const VISION_DEVICES: readonly VisionDevice[] = [
     id: 'hull-mg-bore',
     label: 'Hull MG 34 ball mount',
     station: 'radioOperator',
-    eye: [mm(560), mm(1420), mm(2790)],
-    apertureCentre: [HULL.hullMGMount.centreX, HULL.hullMGMount.centreY, mm(3091)],
+    eye: [
+      HULL.hullMGMount.centreX,
+      HULL.hullMGMount.centreY,
+      mm(driverPlateInnerZ(HULL.hullMGMount.centreY) - EYE_STANDOFF),
+    ],
+    apertureCentre: [
+      HULL.hullMGMount.centreX,
+      HULL.hullMGMount.centreY,
+      driverPlateOuterZ(HULL.hullMGMount.centreY),
+    ],
     clearWidth: HULL.hullMGMount.apertureDiameter,
     clearHeight: HULL.hullMGMount.apertureDiameter,
     viewDirection: [0, 0, 1],

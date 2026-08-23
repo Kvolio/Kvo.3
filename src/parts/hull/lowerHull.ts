@@ -3,7 +3,14 @@ import { Region, WEAR } from '../../geom/attributes.js';
 import { rect, v2, type Poly2 } from '../../geom/poly2.js';
 import { R, S, mm, deg, type MM } from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
-import { HULL, LOWER_HALF_WIDTH, SPONSON_HALF_WIDTH } from '../../spec/hull.js';
+import {
+  GLACIS_HEAD_Z,
+  HULL,
+  LOWER_HALF_WIDTH,
+  SPONSON_HALF_WIDTH,
+  driverPlateOuterZ,
+  glacisInnerY,
+} from '../../spec/hull.js';
 import { structuralPlate, weldJoint } from '../emit.js';
 import type { BuildContext, PartResult } from '../types.js';
 import {
@@ -81,11 +88,16 @@ export function buildLowerHull(ctx: BuildContext): PartResult {
   // Authored as a side profile in (aft-forward, up) and placed outboard. Both
   // sides use the same outline; `facingOutboard` handles the handedness.
   // ---------------------------------------------------------------------------
+  // The front edge climbs the nose slope, tucks under the short glacis, and then
+  // follows the driver's plate up to the sponson floor. Running it straight up
+  // at the hull's foremost point instead — as it did before the glacis existed —
+  // both misses the step and pushes the side plate into the glacis material.
   const lowerSideProfile: Poly2 = [
     v2(rearBottomZ, floorY),
     v2(noseBottomZ, floorY),
-    v2(HULL.frontZ, noseTopY),
-    v2(HULL.frontZ, HULL.sponsonFloorY),
+    v2(HULL.frontZ, glacisInnerY(HULL.frontZ)),
+    v2(GLACIS_HEAD_Z, glacisInnerY(GLACIS_HEAD_Z)),
+    v2(driverPlateOuterZ(HULL.sponsonFloorY), HULL.sponsonFloorY),
     v2(HULL.rearZ, HULL.sponsonFloorY),
     v2(HULL.rearZ, floorY),
   ];
@@ -249,7 +261,7 @@ function translateOutline(poly: Poly2, dx: number, dy: number): Poly2 {
 export const LOWER_HULL_ANGLES = {
   nose: ARMOUR.hull.nose.angle,
   rear: ARMOUR.hull.rear.angle,
-  glacis: deg(ARMOUR.hull.upperGlacis.angle),
+  glacis: deg(ARMOUR.hull.shortGlacis.angle),
 } as const;
 
 export type { MM };
