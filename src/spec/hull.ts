@@ -170,11 +170,38 @@ export const HULL = {
     hatchLength: mm(760),
     hatchCentreZ: mm(-1660),
     hatchThickness: mm(100),
-    /** Radiator grilles either side of the centre hatch. */
-    grilleWidth: mm(700),
-    grilleLength: mm(900),
-    grilleCentreX: mm(1000),
-    grilleCentreZ: mm(-2400),
+    /**
+     * Radiator grilles: FOUR of them, two a side, fore and aft of a small
+     * access panel — not one a side, which is what was here.
+     *
+     * Measured off the 1:50 plan view, which shows each side's pair clearly:
+     * a long forward grille and a shorter aft one sharing a lateral band that
+     * runs from just outboard of the engine hatch nearly to the sponson edge.
+     * Held as a band plus two named stations so the pair cannot drift apart.
+     * Named rather than indexed: `MetaOf` maps over every key of a tuple,
+     * including its own `length`, so an array of objects with a `length` field
+     * cannot carry provenance at all.
+     */
+    grilleInnerX: mm(632),
+    grilleOuterX: mm(1555),
+    grilleStations: {
+      forward: { centreZ: mm(-1657), run: mm(812) },
+      aft: { centreZ: mm(-2707), run: mm(495) },
+    },
+
+    /**
+     * The Feifel intake manifold: the round drum on the centreline that both
+     * trunks run to.
+     *
+     * Without it the trunking ended in mid-deck with an open cap, which was
+     * Gauntlet finding 2.4. The plan view shows it plainly, with the two trunks
+     * converging on it from the rear corners.
+     */
+    intakeDiameter: mm(554),
+    intakeHeight: mm(150),
+    /** Radius taken off the rim to crown the top, so rain runs off it. */
+    intakeCrown: mm(28),
+    intakeCentreZ: mm(-2102),
     /** The grille is a plate with slots, so the engine bay is genuinely open to air. */
     grilleThickness: mm(22),
     grilleSlats: 9,
@@ -365,6 +392,11 @@ const MEASURED =
   'plate angles come from Jentz & Doyle and only the transition heights come from here.';
 const CHAMFER_NOTE =
   'Not documented. Sized from what flame cutting and grinding leave on plate of this thickness.';
+const MEASURED_PLAN =
+  'REF-drawing plan view, measured: the engine deck read pixel by pixel and ' +
+  'calibrated on the superstructure half-width, which the plan shows as a pair ' +
+  'of straight lines and is therefore the crispest scale reference in the view.';
+
 const DRAWING =
   'Scaled from REF-drawing against the sourced 6316 mm hull length, 1780 mm roof height and ' +
   '470 mm ground clearance, and constrained to clear the 2100 mm turret ring.';
@@ -442,10 +474,22 @@ export const HULL_META: MetaOf<typeof HULL> = {
     hatchLength: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     hatchCentreZ: { tol: 80, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
     hatchThickness: { tol: 15, source: 'matches roof-level armour practice', confidence: 'estimated', note: DRAWING },
-    grilleWidth: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
-    grilleLength: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
-    grilleCentreX: { tol: 60, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
-    grilleCentreZ: { tol: 80, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING },
+    grilleInnerX: { tol: 60, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+    grilleOuterX: { tol: 60, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+    grilleStations: {
+      forward: {
+        centreZ: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+        run: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+      },
+      aft: {
+        centreZ: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+        run: { tol: 70, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+      },
+    },
+    intakeDiameter: { tol: 60, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
+    intakeCrown: { tol: 12, source: 'REF-photo rear deck', confidence: 'estimated', note: DRAWING },
+    intakeHeight: { tol: 50, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING },
+    intakeCentreZ: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING },
     grilleThickness: { tol: 8, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     grilleSlats: { tol: 2, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     grilleSlotWidth: { tol: 8, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },

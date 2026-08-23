@@ -34,6 +34,13 @@ const TRUNK_PATH_SAMPLES = 28;
  * everything that genuinely has one.
  */
 const TRUNK_CURVE_TENSION = 0.4;
+
+/** Radial segments on the intake drum. */
+const INTAKE_SEGMENTS = 28;
+
+
+/** Reported distance from a structural edge, for the chipping shader. */
+const INTAKE_EDGE_DIST = 45;
 const STACK_SEGMENTS = 20;
 /** Millimetres from the nearest edge, for the chipping shader on a rolled body. */
 const CANISTER_EDGE_DISTANCE = 30;
@@ -171,6 +178,11 @@ function buildFeifel(ctx: BuildContext): void {
     // an arch. The intermediate control point therefore sits at the resting
     // height and only carries the curve forward over the rear plate's top edge.
     const deckY = mm(HULL.roofY + FEIFEL.trunkRise);
+    // The trunk ends ON the intake manifold, not in mid-deck. It used to stop
+    // short with an open cap, which was Gauntlet finding 2.4; the plan view
+    // shows both trunks converging on a drum on the centreline, and that drum
+    // now exists for them to reach.
+    const intake = HULL.engineDeck;
     const trunkCurve = new CatmullRomCurve3(
       [
         new Vector3(S(x), S(topY), S(axisZ)),
@@ -179,7 +191,13 @@ function buildFeifel(ctx: BuildContext): void {
         new Vector3(
           S(mm(side * FEIFEL.trunkInboardX)),
           S(deckY),
-          S(mm(HULL.engineDeck.hatchCentreZ - FEIFEL.trunkApproach)),
+          S(mm(intake.intakeCentreZ - FEIFEL.trunkApproach)),
+        ),
+        // Into the drum's flank, far enough in that the joint is buried.
+        new Vector3(
+          S(mm((side * intake.intakeDiameter) / 3)),
+          S(deckY),
+          S(intake.intakeCentreZ),
         ),
       ],
       false,
@@ -197,4 +215,35 @@ function buildFeifel(ctx: BuildContext): void {
       cap: true,
     });
   }
+
+  buildIntakeManifold(ctx);
+}
+
+/**
+ * The Feifel intake manifold: the drum on the centreline that both trunks feed.
+ *
+ * Filtered air arrives here from the two pre-cleaners and goes down into the
+ * engine bay, so the drum sits over an opening rather than on solid roof.
+ */
+function buildIntakeManifold(ctx: BuildContext): void {
+  const deck = HULL.engineDeck;
+  const roofTop = mm(HULL.roofY);
+  const radius = mm(deck.intakeDiameter / 2);
+
+  emitRevolve(ctx.render, {
+    profile: [
+      new Vector2(0, S(roofTop)),
+      new Vector2(S(radius), S(roofTop)),
+      new Vector2(S(radius), S(mm(roofTop + deck.intakeHeight - deck.intakeCrown))),
+      // Crowned rather than flat-topped, so rain runs off it the way it does
+      // in the photographs.
+      new Vector2(S(mm(radius - deck.intakeCrown)), S(mm(roofTop + deck.intakeHeight))),
+      new Vector2(0, S(mm(roofTop + deck.intakeHeight))),
+    ],
+    segments: INTAKE_SEGMENTS,
+    material: 'exhaustSteel',
+    region: Region.Exterior,
+    origin: new Vector3(0, 0, S(deck.intakeCentreZ)),
+    edgeDist: INTAKE_EDGE_DIST,
+  });
 }

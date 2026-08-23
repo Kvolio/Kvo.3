@@ -1,7 +1,7 @@
 import { Vector3 } from 'three';
 import { Region, WEAR } from '../../geom/attributes.js';
 import { circle, rect, v2, type Poly2 } from '../../geom/poly2.js';
-import { R, S, mm, type DEG, type MM } from '../../spec/units.js';
+import { R, S, SIDES, mm, sideSign, type DEG, type MM } from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
 import {
   DRIVER_PLATE_FOOT_Y,
@@ -207,12 +207,20 @@ export function buildSuperstructure(ctx: BuildContext): PartResult {
     0,
     roofLocal(deck.hatchCentreZ),
   );
-  const grilleApertures: Poly2[] = (['left', 'right'] as const).map((side) =>
-    translate(
-      rect(deck.grilleWidth, deck.grilleLength),
-      (side === 'left' ? -1 : 1) * deck.grilleCentreX,
-      roofLocal(deck.grilleCentreZ),
-    ),
+  // Four grilles: a long forward one and a shorter aft one on each side. They
+  // share a lateral band, so the band is written once and each station only
+  // says where along the hull it sits and how long it is.
+  const grilleWidth = mm(deck.grilleOuterX - deck.grilleInnerX);
+  const grilleCentreX = mm((deck.grilleOuterX + deck.grilleInnerX) / 2);
+  const grilles = SIDES.flatMap((side) =>
+    Object.values(deck.grilleStations).map((station) => ({
+      centreX: mm(sideSign(side) * grilleCentreX),
+      centreZ: station.centreZ,
+      run: station.run,
+    })),
+  );
+  const grilleApertures: Poly2[] = grilles.map((g) =>
+    translate(rect(grilleWidth, g.run), g.centreX, roofLocal(g.centreZ)),
   );
 
   structuralPlate(ctx, {
@@ -240,29 +248,33 @@ export function buildSuperstructure(ctx: BuildContext): PartResult {
   // it is the same primitive and the same guarantees as every other piece of
   // armour on the vehicle.
   // ---------------------------------------------------------------------------
-  const slotPitch = deck.grilleLength / deck.grilleSlats;
-  const slotLength = mm(deck.grilleWidth - GRILLE_MARGIN * 2);
+  const slotLength = mm(grilleWidth - GRILLE_MARGIN * 2);
 
-  for (const side of ['left', 'right'] as const) {
-    const sign = side === 'left' ? -1 : 1;
-    const centreX = mm(sign * deck.grilleCentreX);
+  for (const g of grilles) {
+    // Slat count follows the grille's length, so the short aft grille does not
+    // get the same nine slats squeezed into half the run.
+    const slats = Math.max(
+      3,
+      Math.round((deck.grilleSlats * g.run) / deck.grilleStations.forward.run),
+    );
+    const slotPitch = g.run / slats;
     const slots: Poly2[] = [];
-    for (let i = 0; i < deck.grilleSlats; i++) {
-      const offset = (i - (deck.grilleSlats - 1) / 2) * slotPitch;
+    for (let i = 0; i < slats; i++) {
+      const offset = (i - (slats - 1) / 2) * slotPitch;
       slots.push(
         translate(
           rect(slotLength, deck.grilleSlotWidth),
-          centreX,
-          roofLocal(mm(deck.grilleCentreZ + offset)),
+          g.centreX,
+          roofLocal(mm(g.centreZ + offset)),
         ),
       );
     }
 
     structuralPlate(ctx, {
       outline: translate(
-        rect(mm(deck.grilleWidth + GRILLE_LIP * 2), mm(deck.grilleLength + GRILLE_LIP * 2)),
-        centreX,
-        roofLocal(deck.grilleCentreZ),
+        rect(mm(grilleWidth + GRILLE_LIP * 2), mm(g.run + GRILLE_LIP * 2)),
+        g.centreX,
+        roofLocal(g.centreZ),
       ),
       holes: slots,
       thickness: deck.grilleThickness,

@@ -55,6 +55,36 @@ describe('hull fittings', () => {
     );
   });
 
+  it('cuts four radiator grilles, two a side', () => {
+    // The plan view shows a long forward grille and a shorter aft one on each
+    // side. One a side, which is what this was, leaves half the engine deck
+    // blank.
+    const stations = Object.keys(HULL.engineDeck.grilleStations);
+    expect(stations.length * 2).toBe(4);
+    expect(HULL.engineDeck.grilleStations.forward.run).toBeGreaterThan(
+      HULL.engineDeck.grilleStations.aft.run,
+    );
+  });
+
+  it('keeps the grille band clear of the engine hatch and the sponson side', () => {
+    expect(HULL.engineDeck.grilleInnerX).toBeGreaterThan(HULL.engineDeck.hatchWidth / 2);
+    expect(HULL.engineDeck.grilleOuterX).toBeLessThan(HULL.superstructureWidth / 2);
+  });
+
+  it('runs the Feifel trunking to something', () => {
+    // Gauntlet finding 2.4: the trunks used to stop in mid-deck with an open
+    // cap. Fired down the centreline onto the intake drum.
+    const deck = HULL.engineDeck;
+    const hit = measureThicknessAlong(
+      geometry,
+      new Vector3(0, S(mm(HULL.roofY + deck.intakeHeight + 400)), S(deck.intakeCentreZ)),
+      new Vector3(0, -1, 0),
+      S(mm(900)),
+    );
+    expect(hit, 'no intake manifold on the centreline').not.toBeNull();
+    expect(toMM(hit!)).toBeCloseTo(400, -1);
+  });
+
   it('drops the second headlight on the later variant', () => {
     const dual = buildAssembly(buildFittings).part.triangleCount;
     const single = buildAssembly(buildFittings, { variant: AusfE_Aug1943 }).part.triangleCount;

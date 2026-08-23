@@ -136,9 +136,11 @@ asserted:
 | 2.1 | The frontal wedge — see CRITICAL-2. The standing rule for this critic was to reject immediately on finding it. | Critical, corrected |
 | 2.2 | The exhaust stacks and the Feifel canisters interpenetrated by 145 mm. Authored in separate sittings against separate references; each individually plausible, and neither one's tests knew the other existed. Stacks moved inboard from 900 mm to 700 mm; `tests/parts/rearClash.test.ts` now checks fittings that share a plate against each other. | Major, corrected |
 | 2.3 | The Feifel trunking arched 335 mm above the roof, because `trunkRise` served as both the resting height on the deck and an extra crest on top of it. In the photographs the trunking is a low hump. The crest is gone; peak now 217 mm. | Major, corrected |
-| 2.4 | The Feifel trunk terminates in mid-deck with an open end. It does not connect to an intake, because the engine deck's air intake is not modelled. | Major |
-| 2.5 | No hatch lids. The driver's, radio operator's and engine hatches are apertures with nothing in them. | Major |
-| 2.6 | No track guards, tow points, headlights, S-mine dischargers, spare-track brackets or tools. | Major |
+| 2.4 | The Feifel trunk terminated in mid-deck with an open end, connecting to nothing, because the engine deck's air intake was not modelled. The plan view shows the drum plainly, with both trunks converging on it; it now exists and they reach it. | Major, corrected |
+| 2.5 | No hatch lids. The driver's and radio operator's lids are now built, seated in their rings on pivot posts, and open. The engine hatch is still an aperture with nothing in it. | Major, partly corrected |
+| 2.6 | No track guards, tow points, headlights or S-mine dischargers. All four are now built; spare-track brackets, tools and tow cables remain absent. | Major, partly corrected |
+| 2.7 | Only two radiator grilles, one a side. The 1:50 plan view shows FOUR — a long forward grille and a shorter aft one on each side, fore and aft of a small access panel. Half the engine deck was blank. | Major, corrected |
+| 2.8 | `MaterialId` was `string`, so a misspelt material fell through to the debug fallback and rendered magenta with nothing failing. It shipped a bright pink track guard. The type is now derived from the preset table. | Major, corrected |
 
 **REJECT** on 2.4 through 2.6. The armour envelope itself would pass.
 
