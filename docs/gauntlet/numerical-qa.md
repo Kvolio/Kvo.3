@@ -13,9 +13,9 @@ All lengths in millimetres.
 | Hull length, nose to rear plate | 6316 | 6327 | +11 | +0.2% | ±60 | ok | TIC-tech; centreline scan of the armour |
 | Overall length, gun forward | 8450 | 8451 | +1 | +0.0% | ±120 | ok | TIC-tech; muzzle to the hull's tail, not to the Feifel drums |
 | Gun overhang past the nose | 2134 | 2135 | +1 | +0.1% | ±120 | ok | derived from the two sourced lengths |
-| Track guard tip, ahead of the nose | 3480 | 3468 | -12 | -0.3% | ±60 | ok | REF-drawing side view: guard edge ahead of the nose |
+| Track guard tip, ahead of the nose | 3480 | 3444 | -36 | -1.0% | ±60 | ok | REF-drawing side view: guard edge ahead of the nose |
 | Aftmost point (Feifel canisters) | 3330 | 3475 | +145 | +4.4% | ±160 | ok | REF-drawing side view: canisters project aft of the rear plate |
-| Width over track guards | 3720 | 3720 | +0 | +0.0% | ±20 | ok | TIC-tech, UNCERTAINTY #5 |
+| Width over track guards | 3720 | 3730 | +10 | +0.3% | ±20 | ok | TIC-tech, UNCERTAINTY #5 |
 | Superstructure width | 3240 | 3240 | +0 | +0.0% | ±40 | ok | REF-drawing front view; measured onto the sponson side |
 | Hull roof height | 1780 | 1780 | -0 | -0.0% | ±25 | ok | TIC-tech; measured by ray onto the roof plate |
 | Height to cupola top | 3000 | 2940 | -60 | -2.0% | ±120 | ok | TIC-tech; measured by ray onto the cupola roof |

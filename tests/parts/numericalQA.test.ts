@@ -26,6 +26,9 @@ const geometry = built.context.render.toGeometry().geometry;
 geometry.computeBoundingBox();
 const box = geometry.boundingBox!;
 
+/** How far down the hinged front flap to probe for its foremost reach. */
+const FLAP_PROBE_FRACTION = 0.9;
+
 interface Row {
   feature: string;
   reference: number;
@@ -124,13 +127,16 @@ describe('numerical QA', () => {
       geometry,
       new Vector3(
         S(mm(HULL.lowerWidth / 2 + 20)),
-        // Mid-plate: the guard's top is flush with the sponson floor's, so its
-        // material sits just BELOW that line, not on it.
+        // Near the BOTTOM of the hinged front flap, which is the point that
+        // actually reaches furthest forward. Probing at the flat run's height
+        // finds the hinge line and reports the guard 320 mm short; probing at
+        // the flap's mid-height finds half of it. Ninety per cent of the way
+        // down is as close to the tip as a ray can get without grazing it.
         S(
           mm(
             HULL.trackGuard.height +
               ARMOUR.hull.roof.thickness -
-              HULL.trackGuard.thickness / 2,
+              HULL.trackGuard.frontFlapDrop * FLAP_PROBE_FRACTION,
           ),
         ),
         S(mm(5000)),
@@ -140,7 +146,7 @@ describe('numerical QA', () => {
     );
     record({
       feature: 'Track guard tip, ahead of the nose',
-      reference: HULL.trackGuard.frontZ,
+      reference: mm(HULL.trackGuard.frontZ + HULL.trackGuard.frontFlapRun),
       model: guardTipHit === null ? NaN : 5000 - toMM(guardTipHit),
       unit: 'mm',
       tolerance: 60,

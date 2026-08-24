@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HULL, TURRET } from '../../src/spec/index.js';
+import { ARMOUR, GUN, HULL, TURRET } from '../../src/spec/index.js';
 
 /**
  * Physical constraints on the turret, checked as constraints rather than as
@@ -48,5 +48,21 @@ describe('turret fit', () => {
         sweep - h.diameter / 2,
       );
     }
+  });
+});
+
+describe('gun in the turret face', () => {
+  it('seats the mantlet inside the turret front, not hanging off it', () => {
+    // The mantlet is centred on the trunnion, so the trunnion's height decides
+    // where the gun sits in the turret's face. At 1,980 mm the casting's lower
+    // edge fell 120 mm below the ring plane and hung off the bottom of the
+    // turret — which is exactly how it looked.
+    const ringY = TURRET.ring.planeY;
+    const roofY = ringY + TURRET.shell.interiorHeight + ARMOUR.turret.roof.thickness;
+    const bottom = GUN.elevation.trunnionY - TURRET.mantlet.height / 2;
+    const top = GUN.elevation.trunnionY + TURRET.mantlet.height / 2;
+
+    expect(bottom, 'the mantlet hangs below the turret ring').toBeGreaterThan(ringY);
+    expect(top, 'the mantlet stands above the turret roof').toBeLessThan(roofY);
   });
 });

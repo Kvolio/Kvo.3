@@ -48,10 +48,10 @@ function guardOutline(): Poly2 {
   const sponsonFrontZ = driverPlateOuterZ(HULL.sponsonFloorY);
 
   return [
-    // Forward tip: swept back from the outboard corner, which is the January
-    // 1943 triangular front section.
+    // The flat run ends square at the hinge line; the angled flap beyond it is
+    // built separately. The January 1943 triangular treatment is on the TAIL.
     v2(LOWER_HALF_WIDTH, g.frontZ),
-    v2(g.outerX, mm(g.frontZ - g.frontTriangleRun)),
+    v2(g.outerX, g.frontZ),
     v2(g.outerX, mm(g.rearZ + g.rearTriangleRun)),
     v2(SPONSON_HALF_WIDTH, g.rearZ),
     // Inboard edge runs against the sponson side for as long as there is one.
@@ -77,6 +77,7 @@ function planOutline(side: (typeof SIDES)[number], poly: Poly2): Poly2 {
 function buildTrackGuards(ctx: BuildContext): void {
   const g = HULL.trackGuard;
   buildGuardLipAndBrackets(ctx);
+  buildGuardFrontFlap(ctx);
   // Top surface flush with the sponson floor's, so a crewman steps from guard
   // to sponson without a lip in the way. Hanging the guard's UNDERSIDE at that
   // height instead leaves a six-millimetre kerb the whole length of the tank.
@@ -91,6 +92,45 @@ function buildTrackGuards(ctx: BuildContext): void {
       materials: { inner: 'armourPaintedExterior', outer: 'armourPaintedExterior' },
       // Crews walked these constantly and they took the worst of the mud.
       wear: WEAR.footTraffic,
+    });
+  }
+}
+
+/**
+ * The hinged front section, angling DOWN over the drive sprocket.
+ *
+ * A Tiger's front fender is not the flat run carried straight on: it hinges
+ * just ahead of the sprocket and drops. Extending the flat plate instead left a
+ * wing projecting past the nose at guard height with nothing under it, which is
+ * what the critics kept reporting as stray or drooping geometry.
+ */
+function buildGuardFrontFlap(ctx: BuildContext): void {
+  const g = HULL.trackGuard;
+  const topY = mm(g.height + ARMOUR.hull.roof.thickness);
+  const drop = Math.atan2(g.frontFlapDrop, g.frontFlapRun);
+  const slant = Math.hypot(g.frontFlapRun, g.frontFlapDrop);
+
+  for (const side of SIDES) {
+    const sign = sideSign(side);
+    const frame = facingUp(mm(0)).makeRotationX(-Math.PI / 2 + drop);
+    frame.setPosition(
+      S(mm((sign * (LOWER_HALF_WIDTH + g.outerX)) / 2)),
+      S(mm(topY - g.frontFlapDrop / 2)),
+      S(mm(g.frontZ + g.frontFlapRun / 2)),
+    );
+    structuralPlate(ctx, {
+      outline: rect(mm(g.outerX - LOWER_HALF_WIDTH), mm(slant)),
+      thickness: g.thickness,
+      frame,
+      chamfer: HULL.chamfer.side,
+      region: Region.Exterior,
+      materials: {
+        inner: 'armourPaintedExterior',
+        outer: 'armourPaintedExterior',
+        edge: 'armourPaintedExterior',
+      },
+      wear: WEAR.footTraffic,
+      edgeBandWidth: HULL.interiorEdgeBand,
     });
   }
 }

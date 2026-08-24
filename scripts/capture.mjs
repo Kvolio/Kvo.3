@@ -73,6 +73,13 @@ const DETAIL_VIEWS = [
   { id: 'detail-hatches-open', eye: [-2400, 3000, 3600], target: [0, 1800, 1700], hatches: true },
   { id: 'detail-hatches-shut', eye: [-2400, 3000, 3600], target: [0, 1800, 1700] },
   { id: 'detail-hull-side', eye: [-3200, 1200, 1000], target: [-1850, 1000, 600] },
+  // The running gear, close and from slightly above and forward, so the three
+  // interleaved ranks separate instead of projecting onto one another. An
+  // orthographic side view hides the interleave completely: every rank lands on
+  // exactly the same pixels.
+  { id: 'detail-running-gear', eye: [-3400, 1500, 2600], target: [-1500, 500, 700] },
+  { id: 'detail-sprocket', eye: [-2700, 1100, 4100], target: [-1500, 700, 2470] },
+  { id: 'detail-idler', eye: [-2700, 1100, -4200], target: [-1500, 620, -2510] },
   { id: 'detail-rear', eye: [-2200, 1900, -5200], target: [-1080, 1400, -3158] },
   { id: 'detail-cupola', eye: [2600, 3100, 1400], target: [500, 2500, -985] },
   // Inside, standing on the crew floor looking forward at the driver's station.
@@ -93,7 +100,17 @@ const browser = await chromium.launch({
     '--disable-gpu-sandbox',
   ],
 });
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+// 1920x1080. At 1280x720 a whole tank leaves the running gear about a hundred
+// pixels tall, and three separate critics reported features as absent that are
+// demonstrably built — the renders were not showing them. A critic can only be
+// as accurate as the evidence it is handed.
+// 1600x900. At 1280x720 a whole tank leaves the running gear about a hundred
+// pixels tall, and three separate critics reported features as absent that are
+// demonstrably built — the renders were not showing them. A critic can only be
+// as accurate as the evidence it is handed. 1920x1080 is past what SwiftShader
+// will render inside a screenshot timeout for a 76k-triangle scene.
+const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+page.setDefaultTimeout(120_000);
 
 page.on('console', (m) => {
   if (m.type() === 'error') console.error('  page error:', m.text());

@@ -45,8 +45,20 @@ export const GUN = {
      */
     min: deg(-6.5),
     max: deg(17),
-    /** Trunnion axis height above ground, turret at nominal ride height. */
-    trunnionY: mm(1980),
+    /**
+     * Trunnion axis height above ground, turret at nominal ride height.
+     *
+     * The mantlet is centred on this, so it decides where the gun sits in the
+     * turret's face. At 1,980 mm the mantlet's lower edge fell to 1,660 —
+     * 120 mm BELOW the turret's ring plane — so the casting hung off the bottom
+     * of the turret with a band of bare plate above it.
+     *
+     * Measured off the front elevation, where the mantlet sits a little below
+     * the turret's vertical centre: 2,160 mm puts its lower edge 60 mm above the
+     * ring and leaves 155 mm of front plate above it, which is what the drawing
+     * shows.
+     */
+    trunnionY: mm(2160),
     /** Trunnion axis position relative to the turret ring centre. */
     trunnionZ: mm(430),
     /**
@@ -164,7 +176,7 @@ export const GUN_META: MetaOf<typeof GUN> = {
   elevation: {
     min: { tol: 1.5, source: 'TIC-tech', confidence: 'secondary', uncertainty: 3 },
     max: { tol: 2, source: 'TIC-tech', confidence: 'secondary', uncertainty: 3 },
-    trunnionY: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    trunnionY: { tol: 70, source: 'REF-drawing front elevation, measured', confidence: 'estimated', note: DRAWING_ESTIMATE },
     tubeBehindTrunnion: { tol: 0.05, source: 'REF-cutaway: gun balanced about the trunnion', confidence: 'estimated', note: DRAWING_ESTIMATE },
     trunnionZ: { tol: 40, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },

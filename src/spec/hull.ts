@@ -313,7 +313,16 @@ export const HULL = {
      * 1:50 drawing shows as a thin edge ahead of the nose, and reading that
      * edge as armour is what makes the front look like a vertical slab.
      */
-    frontZ: mm(3480),
+    /**
+     * Where the flat run of the guard ends. Forward of this the guard is a
+     * separate HINGED SECTION angling down over the drive sprocket — carried
+     * straight on as a flat plate it projected past the nose as a wing, which
+     * every critic that looked at the front reported.
+     */
+    frontZ: mm(3120),
+    /** The hinged front flap: how far it reaches and how far it drops. */
+    frontFlapRun: mm(360),
+    frontFlapDrop: mm(260),
     rearZ: mm(-3330),
     /**
      * Sweep-back of the forward tip, outboard corner to inboard. From January
@@ -334,6 +343,32 @@ export const HULL = {
     brackets: 5,
     bracketWidth: mm(90),
     bracketThickness: mm(10),
+  },
+
+  /**
+   * The tool and stowage array carried on the hull.
+   *
+   * Every critic reported the hull as a bare shell, and they were right: a
+   * Tiger's sponsons and rear deck are covered in kit. Positions are laid out
+   * from the photographs rather than sourced individually — they varied between
+   * vehicles and between crews, so the arrangement is declared as
+   * reconstruction and only the presence of each item is asserted.
+   *
+   * `lengthZ` is along the hull, `depth` off the sponson side.
+   */
+  stowage: {
+    /** Sponson-side items, given as centre-Z and the size of each. */
+    towCable: { centreZ: mm(-600), lengthZ: mm(2600), diameter: mm(38) },
+    jack: { centreZ: mm(-2050), lengthZ: mm(760), height: mm(180), depth: mm(150) },
+    jackBlock: { centreZ: mm(-2760), lengthZ: mm(420), height: mm(230), depth: mm(200) },
+    crowbar: { centreZ: mm(1200), lengthZ: mm(1180), diameter: mm(42) },
+    axe: { centreZ: mm(300), lengthZ: mm(760), width: mm(120), depth: mm(50) },
+    shovel: { centreZ: mm(-1350), lengthZ: mm(980), width: mm(150), depth: mm(50) },
+    fireExtinguisher: { centreZ: mm(1900), height: mm(380), diameter: mm(115) },
+    /** How far above the sponson floor the rack sits. */
+    railY: mm(1420),
+    /** How far the rack stands off the sponson side. */
+    standoff: mm(60),
   },
 
   /**
@@ -668,6 +703,8 @@ export const HULL_META: MetaOf<typeof HULL> = {
     outerX: { tol: 15, source: 'derived from OVERALL.widthOverCombatTracks', confidence: 'derived' },
     height: { tol: 50, source: 'REF-drawing', confidence: 'estimated', note: DRAWING },
     frontZ: { tol: 90, source: 'REF-drawing side view: guard edge ahead of the nose', confidence: 'estimated', note: DRAWING },
+    frontFlapRun: { tol: 90, source: 'REF-photo-2: hinged front section angles down', confidence: 'estimated', note: DRAWING },
+    frontFlapDrop: { tol: 80, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     rearZ: { tol: 90, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING },
     frontTriangleRun: { tol: 90, source: 'TIC-changes: triangular front sections from Jan 1943', confidence: 'estimated', note: DRAWING },
     lipDepth: { tol: 30, source: 'REF-photo-1: folded outer lip', confidence: 'estimated', note: DRAWING },
@@ -676,6 +713,49 @@ export const HULL_META: MetaOf<typeof HULL> = {
     bracketWidth: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     bracketThickness: { tol: 4, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     rearTriangleRun: { tol: 70, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING },
+  },
+  stowage: {
+    towCable: {
+      centreZ: { tol: 400, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      lengthZ: { tol: 400, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      diameter: { tol: 12, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+    },
+    jack: {
+      centreZ: { tol: 400, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      lengthZ: { tol: 120, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      height: { tol: 60, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      depth: { tol: 50, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+    },
+    jackBlock: {
+      centreZ: { tol: 400, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      lengthZ: { tol: 90, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      height: { tol: 60, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      depth: { tol: 50, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+    },
+    crowbar: {
+      centreZ: { tol: 400, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      lengthZ: { tol: 200, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      diameter: { tol: 12, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+    },
+    axe: {
+      centreZ: { tol: 400, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      lengthZ: { tol: 120, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      width: { tol: 40, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      depth: { tol: 20, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+    },
+    shovel: {
+      centreZ: { tol: 400, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      lengthZ: { tol: 150, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      width: { tol: 40, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      depth: { tol: 20, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+    },
+    fireExtinguisher: {
+      centreZ: { tol: 400, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      height: { tol: 60, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+      diameter: { tol: 25, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+    },
+    railY: { tol: 120, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
+    standoff: { tol: 25, source: 'REF-photo-2 and REF-photo-3: hull sides and rear covered in kit. Arrangement varied between vehicles; declared as reconstruction.', confidence: 'estimated', note: DRAWING },
   },
   sMineDischarger: {
     tubeDiameter: { tol: 15, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },

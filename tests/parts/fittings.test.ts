@@ -27,8 +27,21 @@ describe('hull fittings', () => {
   });
 
   it('carries the guards past both ends of the armour', () => {
-    expect(HULL.trackGuard.frontZ).toBeGreaterThan(HULL.frontZ);
+    // At the front the guard reaches past the nose via its HINGED FLAP, which
+    // angles down over the sprocket. The flat run stops short of the nose on
+    // purpose — carried straight on it was a wing hanging in the air.
+    expect(
+      HULL.trackGuard.frontZ + HULL.trackGuard.frontFlapRun,
+    ).toBeGreaterThan(HULL.frontZ);
     expect(HULL.trackGuard.rearZ).toBeLessThan(HULL.rearZ);
+  });
+
+  it('drops the front flap far enough to cover the sprocket', () => {
+    // The flap exists to shield the drive sprocket. If it stops level with the
+    // guard it is decoration.
+    expect(HULL.trackGuard.frontFlapDrop).toBeGreaterThan(
+      HULL.trackGuard.lipDepth * 2,
+    );
   });
 
   it('hangs the guards level with the sponson floor', () => {
