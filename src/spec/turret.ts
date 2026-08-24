@@ -209,6 +209,30 @@ export const TURRET = {
     centreZ: mm(-126),
   },
 
+  /**
+   * What else the turret roof carries.
+   *
+   * It was bare apart from the cupola and the loader's hatch. A Tiger's roof
+   * has the ventilator dome between them, the loader's periscope forward of his
+   * hatch, and lifting eyes at the corners for pulling the turret off.
+   */
+  roofFurniture: {
+    fanDomeDiameter: mm(300),
+    fanDomeHeight: mm(75),
+    fanDomeCentreZ: mm(-420),
+    periscopeWidth: mm(180),
+    periscopeLength: mm(120),
+    periscopeHeight: mm(70),
+    periscopeCentreX: starboard(mm(560)),
+    periscopeCentreZ: mm(260),
+    liftingEyes: 3,
+    liftingEyeWidth: mm(90),
+    liftingEyeHeight: mm(130),
+    liftingEyeThickness: mm(35),
+    /** Edge band on the small roof fittings, for the chipping shader. */
+    edgeBand: mm(25),
+  },
+
   /** Ausstiegluke, right side of the turret rear. Added December 1942. */
   escapeHatch: {
     width: mm(500),
@@ -217,6 +241,17 @@ export const TURRET = {
     openAngle: deg(95),
     /** Centre height above the turret ring plane. */
     centreY: mm(420),
+    /**
+     * Where round the turret it sits, as a bearing from dead astern.
+     *
+     * Neither this nor the pistol port had a bearing at all — only a height —
+     * so the turret's rear wall was blank. Both are in the curved section, so
+     * both are cut the way the cupola's vision slits are: emit the wall either
+     * side and the opening is what is left.
+     */
+    bearing: deg(38),
+    /** How far the closed hatch's plate stands off the wall. */
+    proud: mm(35),
   },
 
   /** One remaining pistol port, at the left rear. Its right-hand twin became the escape hatch. */
@@ -224,6 +259,12 @@ export const TURRET = {
     diameter: mm(90),
     plugDiameter: mm(150),
     centreY: mm(430),
+    /** To port, mirroring where its twin was before the escape hatch replaced it. */
+    bearing: deg(-40),
+    /** How far the plug stands proud of the wall. */
+    plugProud: mm(40),
+    /** Taper on the plug, so it seats rather than sitting flat. */
+    plugTaper: mm(18),
   },
 
   /** NbK 39 90 mm smoke candle dischargers, three per side. Deleted June 1943. */
@@ -403,17 +444,37 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     centreX: { tol: 70, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     centreZ: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
+  roofFurniture: {
+    fanDomeDiameter: { tol: 60, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    fanDomeHeight: { tol: 30, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    fanDomeCentreZ: { tol: 120, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    periscopeWidth: { tol: 50, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    periscopeLength: { tol: 40, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    periscopeHeight: { tol: 30, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    periscopeCentreX: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    periscopeCentreZ: { tol: 120, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    liftingEyes: { tol: 1, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    liftingEyeWidth: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    liftingEyeHeight: { tol: 40, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    edgeBand: { tol: 10, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    liftingEyeThickness: { tol: 15, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+  },
   escapeHatch: {
     width: { tol: 30, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
     height: { tol: 30, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
     thickness: { tol: 5, source: 'matches turret side thickness', confidence: 'estimated', note: DRAWING_ESTIMATE },
     openAngle: { tol: 10, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
     centreY: { tol: 30, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    bearing: { tol: 12, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    proud: { tol: 15, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   pistolPort: {
     diameter: { tol: 10, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
     plugDiameter: { tol: 15, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
     centreY: { tol: 30, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    bearing: { tol: 12, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    plugProud: { tol: 15, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    plugTaper: { tol: 8, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   smokeDischargers: {
     perSide: { tol: 0, source: 'TIC-changes, REF-photo-1', confidence: 'secondary' },

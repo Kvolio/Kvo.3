@@ -146,7 +146,13 @@ export const FEIFEL = {
    */
   trunkDiameter: mm(105),
   /** Lateral offset of each canister from the vehicle centreline, on the rear plate. */
-  centreX: mm(1080),
+  /**
+   * Out at the rear corners, where the rear elevation puts them — measured at
+   * about 1,284 mm off the centreline. At 1,080 they crowded the exhausts, and
+   * enlarging the exhaust guards to the size the drawing shows brought the two
+   * within 20 mm of each other. The clash test caught it.
+   */
+  centreX: mm(1284),
   /** Height of the canister's base above the ground. */
   baseY: mm(940),
   /**

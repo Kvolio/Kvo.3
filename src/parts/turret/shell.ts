@@ -2,7 +2,7 @@ import { Vector2, Vector3 } from 'three';
 import { Region, WEAR } from '../../geom/attributes.js';
 import { circle, rect, roundedRect, translate, v2, type Poly2 } from '../../geom/poly2.js';
 import { emitRevolve } from '../../prims/lathe.js';
-import { S, mm, type MM } from '../../spec/units.js';
+import { R, S, mm, type DEG, type MM } from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
 import { HULL } from '../../spec/hull.js';
 import {
@@ -98,6 +98,38 @@ function horseshoe(outset: number): Poly2 {
     pts.push(v2(mm(-q.x), mm(q.y)));
   }
   return pts;
+}
+
+/**
+ * A point on the turret's rear arc, with the wall's outward normal there.
+ *
+ * `bearing` is measured from dead astern: positive to starboard, negative to
+ * port, so 0 is the tail and 90 is abeam. Fittings on the curved wall — the
+ * escape hatch, the pistol port — need both the point and the direction the
+ * wall faces, and deriving them from the same parameterisation the wall itself
+ * uses is what stops a fitting sinking into the armour or floating off it.
+ */
+export function rearArcPoint(bearing: DEG): {
+  position: Vector3;
+  outward: Vector3;
+} {
+  const shell = TURRET.shell;
+  const frontZ = FRONT_Z;
+  const rearZ = mm(FRONT_Z - shell.length);
+  const widestZ = mm(frontZ - (frontZ - rearZ) * shell.widestAtFraction);
+  const a = shell.width / 2;
+  const b = widestZ - rearZ;
+
+  const side = Math.sign(R(bearing)) || 1;
+  const theta = Math.PI / 2 - Math.abs(R(bearing));
+
+  const x = side * a * Math.cos(theta);
+  const z = widestZ - b * Math.sin(theta);
+
+  // Outward normal of the ellipse at this parameter.
+  const outward = new Vector3(side * b * Math.cos(theta), 0, -a * Math.sin(theta)).normalize();
+
+  return { position: new Vector3(S(mm(x)), 0, S(mm(z))), outward };
 }
 
 /** A plan outline in (x, worldZ) as a horizontal plate's local (x, y). */

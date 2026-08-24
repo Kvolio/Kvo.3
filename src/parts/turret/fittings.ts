@@ -1,12 +1,24 @@
-import { Vector2, Vector3 } from 'three';
+import { Matrix4, Vector2, Vector3 } from 'three';
 import { Region, WEAR } from '../../geom/attributes.js';
-import { rect, type Poly2 } from '../../geom/poly2.js';
+import { rect, roundedRect, type Poly2 } from '../../geom/poly2.js';
 import { emitRevolve } from '../../prims/lathe.js';
-import { R, S, SIDES, mm, sideSign, type MM, type Side } from '../../spec/units.js';
+import {
+  R,
+  S,
+  SIDES,
+  mm,
+  port,
+  sideSign,
+  starboard,
+  type DEG,
+  type MM,
+  type Side,
+} from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
 import { HULL } from '../../spec/hull.js';
 import { TRACK } from '../../spec/runningGear.js';
 import { TURRET } from '../../spec/turret.js';
+import { rearArcPoint } from './shell.js';
 import { structuralPlate } from '../emit.js';
 import type { BuildContext, PartResult } from '../types.js';
 import { facingOutboard, facingUp } from '../hull/frames.js';
@@ -207,8 +219,149 @@ const SPARE_LINK_VISIBLE = 0.55;
 /** Where up the turret side the spare links are racked. */
 const SPARE_LINK_HEIGHT_FRACTION = 0.45;
 
+/**
+ * The ventilator dome, the loader's periscope and the lifting eyes.
+ *
+ * The turret roof was bare apart from its two hatches, which is not what a
+ * Tiger's looks like from above at all.
+ */
+function buildRoofFurniture(ctx: BuildContext): void {
+  const f = TURRET.roofFurniture;
+
+  // The ventilator dome, between the two hatches.
+  emitRevolve(ctx.render, {
+    profile: [
+      new Vector2(0, S(ROOF_Y)),
+      new Vector2(S(mm(f.fanDomeDiameter / 2)), S(ROOF_Y)),
+      new Vector2(
+        S(mm(f.fanDomeDiameter / 2 - f.fanDomeHeight / 2)),
+        S(mm(ROOF_Y + f.fanDomeHeight)),
+      ),
+      new Vector2(0, S(mm(ROOF_Y + f.fanDomeHeight))),
+    ],
+    segments: TUBE_SEGMENTS * 2,
+    material: 'armourPaintedExterior',
+    region: Region.Exterior,
+    origin: new Vector3(0, 0, S(mm(TURRET.ring.centreZ + f.fanDomeCentreZ))),
+    edgeDist: FITTING_EDGE_DIST,
+  });
+
+  // The loader's periscope housing, forward of his hatch.
+  structuralPlate(ctx, {
+    outline: rect(f.periscopeWidth, f.periscopeLength),
+    thickness: f.periscopeHeight,
+    frame: roofFitting(
+      f.periscopeCentreX,
+      mm(TURRET.ring.centreZ + f.periscopeCentreZ),
+      f.periscopeHeight,
+    ),
+    chamfer: HULL.chamfer.side,
+    region: Region.Exterior,
+    materials: {
+      inner: 'armourPaintedExterior',
+      outer: 'armourPaintedExterior',
+      edge: 'armourPaintedExterior',
+    },
+    edgeBandWidth: f.edgeBand,
+  });
+
+  // Lifting eyes: two at the front corners, one at the tail.
+  const eyeStations: readonly (readonly [MM, MM])[] = [
+    [port(mm(TURRET.shell.frontPlateWidth / 2 - f.liftingEyeWidth)), mm(TURRET.ring.centreZ + TURRET.shell.frontOverhang - f.liftingEyeWidth)],
+    [starboard(mm(TURRET.shell.frontPlateWidth / 2 - f.liftingEyeWidth)), mm(TURRET.ring.centreZ + TURRET.shell.frontOverhang - f.liftingEyeWidth)],
+    [mm(0), mm(REAR_Z + f.liftingEyeWidth)],
+  ];
+  for (const [x, z] of eyeStations.slice(0, f.liftingEyes)) {
+    structuralPlate(ctx, {
+      outline: rect(f.liftingEyeThickness, f.liftingEyeWidth),
+      thickness: f.liftingEyeHeight,
+      frame: roofFitting(x, z, f.liftingEyeHeight),
+      chamfer: HULL.chamfer.side,
+      region: Region.Exterior,
+      materials: {
+        inner: 'machinedSteel',
+        outer: 'machinedSteel',
+        edge: 'machinedSteel',
+      },
+      edgeBandWidth: f.edgeBand,
+    });
+  }
+}
+
+/** A fitting standing on the turret roof. */
+function roofFitting(x: MM, z: MM, height: MM): ReturnType<typeof facingUp> {
+  const m = facingUp(mm(ROOF_Y + height));
+  m.setPosition(S(x), S(mm(ROOF_Y + height)), S(z));
+  return m;
+}
+
+/**
+ * The escape hatch and the pistol port, both in the curved rear wall.
+ *
+ * Built CLOSED, as raised fittings on the outside — which is what a shut escape
+ * hatch and a seated pistol plug actually are. The turret's rear was blank
+ * because neither had a bearing in the spec, only a height, so there was
+ * nowhere to put them.
+ */
+function buildRearWallFittings(ctx: BuildContext): void {
+  const e = TURRET.escapeHatch;
+  const p = TURRET.pistolPort;
+
+  /** A fitting seated on the curved wall at a bearing from astern. */
+  const onWall = (bearing: DEG, y: MM, proud: MM): ReturnType<typeof facingUp> => {
+    const { position, outward } = rearArcPoint(bearing);
+    const m = new Matrix4().lookAt(
+      new Vector3(),
+      outward.clone().negate(),
+      new Vector3(0, 1, 0),
+    );
+    m.setPosition(
+      position.x + outward.x * S(proud),
+      S(y),
+      position.z + outward.z * S(proud),
+    );
+    return m;
+  };
+
+  // The escape hatch: a plate with its hinge, standing proud of the wall.
+  structuralPlate(ctx, {
+    outline: roundedRect(e.width, e.height, mm(e.height / 5), 5),
+    thickness: e.proud,
+    frame: onWall(e.bearing, mm(TURRET.ring.planeY + e.centreY), e.proud),
+    chamfer: HULL.chamfer.structural,
+    region: Region.Exterior,
+    materials: {
+      inner: 'armourPaintedExterior',
+      outer: 'armourPaintedExterior',
+      edge: 'armourPaintedExterior',
+    },
+    wear: WEAR.handled,
+    edgeBandWidth: TURRET.roofFurniture.edgeBand,
+  });
+
+  // The pistol port's plug, seated in its opening.
+  emitRevolve(ctx.render, {
+    profile: [
+      new Vector2(0, 0),
+      new Vector2(S(mm(p.plugDiameter / 2)), 0),
+      new Vector2(S(mm(p.plugDiameter / 2 - p.plugTaper)), S(p.plugProud)),
+      new Vector2(0, S(p.plugProud)),
+    ],
+    segments: TUBE_SEGMENTS,
+    material: 'machinedSteel',
+    region: Region.Exterior,
+    frame: onWall(p.bearing, mm(TURRET.ring.planeY + p.centreY), mm(0)).multiply(
+      new Matrix4().makeRotationX(-Math.PI / 2),
+    ),
+    wear: WEAR.handled,
+    edgeDist: FITTING_EDGE_DIST,
+  });
+}
+
 export function buildTurretFittings(ctx: BuildContext): PartResult {
   const start = ctx.render.triangleCount;
+  buildRoofFurniture(ctx);
+  buildRearWallFittings(ctx);
   buildStowageBin(ctx);
   buildSmokeDischargers(ctx);
   buildSpareTrackLinks(ctx);

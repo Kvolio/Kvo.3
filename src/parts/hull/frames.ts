@@ -1,6 +1,6 @@
 import { Matrix4 } from 'three';
 import { mirrorX, type Poly2 } from '../../geom/poly2.js';
-import { R, S, type DEG, type MM } from '../../spec/units.js';
+import { R, S, sideSign, type DEG, type MM } from '../../spec/units.js';
 import type { Side } from '../../spec/units.js';
 
 /**
@@ -42,7 +42,14 @@ export function facingDown(height: MM): Matrix4 {
  * handedness is handled once, in the open, rather than at each call site.
  */
 export function facingOutboard(side: Side, x: MM): Matrix4 {
-  const sign = side === 'left' ? -1 : 1;
+  // `sideSign`, not a local `left ? -1 : 1`. This function predates the
+  // laterality correction and kept the old convention, so `facingOutboard`
+  // returned the STARBOARD frame when asked for port and vice versa. On the
+  // symmetric plates it was written for that is invisible, which is why it
+  // survived — but the first asymmetric part built on it put its material on
+  // the wrong side of the plate and widened the vehicle by 240 mm, which the
+  // numerical QA caught immediately.
+  const sign = sideSign(side);
   const m = new Matrix4().makeRotationY((sign * Math.PI) / 2);
   m.setPosition(sign * S(x), 0, 0);
   return m;
@@ -88,7 +95,9 @@ export function facingAft(z: MM, y: MM, tilt: DEG): Matrix4 {
  * See `facingOutboard` for why this is necessary.
  */
 export function sideProfile(side: Side, profileInWorldZ: Poly2): Poly2 {
-  return side === 'left' ? profileInWorldZ : mirrorX(profileInWorldZ);
+  // Mirrored on whichever side `facingOutboard` rotates the other way, so the
+  // two stay in step. Both now key off `sideSign`.
+  return sideSign(side) > 0 ? profileInWorldZ : mirrorX(profileInWorldZ);
 }
 
 /** Horizontal run of a plate of the given height at the given angle from vertical. */

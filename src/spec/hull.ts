@@ -206,10 +206,17 @@ export const HULL = {
   headlight: {
     centreX: mm(1080),
     /**
-     * Where along the glacis they stand. The glacis is only a 550 mm run, so
+     * Where along the glacis they stand. The glacis is only a 650 mm run, so
      * this is most of the way back along it, clear of the nose seam.
      */
     standZ: mm(2780),
+    /** The pedestal the lamp sits on, and how far it lifts it off the glacis. */
+    pedestalDiameter: mm(80),
+    pedestalHeight: mm(110),
+    /** Depth of the reflector bowl behind the lens. */
+    bowlDepth: mm(70),
+    /** Width of the rim around the lens. */
+    rimWidth: mm(18),
     diameter: mm(180),
     depth: mm(120),
   },
@@ -270,11 +277,17 @@ export const HULL = {
    */
   exhaust: {
     centreX: mm(700),
+    /**
+     * The armoured guard is a FLARED CASTING, not a plain sleeve, and the stack
+     * rises close to the deck line. At 700 mm tall with a 260 mm collar the
+     * stacks sat well below the deck and the guards did not read at all.
+     */
+    guardFlare: mm(70),
     diameter: mm(150),
-    height: mm(700),
+    height: mm(980),
     /** Armoured guard around the base, added January 1943. */
-    guardDiameter: mm(260),
-    guardHeight: mm(330),
+    guardDiameter: mm(330),
+    guardHeight: mm(430),
     /** Height of the stack's base above the ground. */
     baseY: mm(700),
     /** Wall thicknesses: the stack is open at the top and can be looked down. */
@@ -309,6 +322,18 @@ export const HULL = {
     frontTriangleRun: mm(420),
     /** Matching sweep at the tail, so the guard does not end in a square edge. */
     rearTriangleRun: mm(210),
+    /**
+     * The downturned lip along the outer edge, and the brackets under it.
+     *
+     * Without them the guard is a 6 mm sheet seen edge-on — a foil sliver with
+     * nothing holding it up. A Tiger's fender has a folded lip and is carried
+     * on brackets off the sponson.
+     */
+    lipDepth: mm(85),
+    lipThickness: mm(6),
+    brackets: 5,
+    bracketWidth: mm(90),
+    bracketThickness: mm(10),
   },
 
   /**
@@ -359,13 +384,44 @@ export const HULL = {
   /** The same, for interior sheet and floor plates, which are smaller. */
   interiorEdgeBand: mm(50),
 
-  /** Tow shackles at each corner. */
+  /**
+   * What the rear plate carries besides the exhausts.
+   *
+   * It was a featureless trapezoidal slab. The blueprint's rear elevation shows
+   * an oval inertia-starter crank port on the centreline, a towing coupling
+   * below it, and a shackle lug at each lower corner.
+   */
+  rearPlate: {
+    crankPortWidth: mm(230),
+    crankPortHeight: mm(170),
+    crankPortCentreY: mm(1180),
+    crankPortProud: mm(45),
+    /** Bezel around the crank port's opening. */
+    crankPortBezel: mm(35),
+    hitchWidth: mm(260),
+    hitchHeight: mm(180),
+    hitchCentreY: mm(760),
+    hitchProud: mm(130),
+    shackleCentreX: mm(1180),
+    shackleCentreY: mm(830),
+  },
+
+  /**
+   * Tow shackle lugs at each corner.
+   *
+   * Forged blocks, not tabs. At 120 x 45 they read as scratches scribed on the
+   * nose rather than as something you could shackle a 57-tonne recovery cable
+   * to — which is what they are for and what the photographs show.
+   */
   towPoint: {
     centreX: mm(760),
     frontY: mm(700),
     rearY: mm(760),
-    width: mm(120),
-    thickness: mm(45),
+    width: mm(230),
+    height: mm(190),
+    thickness: mm(110),
+    /** The eye through the lug. */
+    eyeDiameter: mm(95),
   },
 } as const;
 
@@ -461,6 +517,10 @@ const MEASURED_PLAN =
   'calibrated on the superstructure half-width, which the plan shows as a pair ' +
   'of straight lines and is therefore the crispest scale reference in the view.';
 
+const REAR_ELEV =
+  'REF-drawing rear elevation: the crank port, towing coupling and corner ' +
+  'shackles are drawn plainly; the plate was modelled as a bare slab.';
+
 const MEASURED_FRONT_ELEV =
   'REF-drawing front elevation, enlarged nine times before reading: the visor ' +
   'housing and the ball mount resolve as distinct raised castings rather than ' +
@@ -552,6 +612,10 @@ export const HULL_META: MetaOf<typeof HULL> = {
     apertureDiameter: { tol: 25, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
   },
   headlight: {
+    pedestalDiameter: { tol: 25, source: 'Bosch pattern headlight', confidence: 'estimated', note: DRAWING },
+    pedestalHeight: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
+    rimWidth: { tol: 8, source: 'Bosch pattern headlight', confidence: 'estimated', note: DRAWING },
+    bowlDepth: { tol: 25, source: 'Bosch pattern headlight', confidence: 'estimated', note: DRAWING },
     standZ: { tol: 90, source: 'REF-photo-2: lamps stand on the glacis', confidence: 'estimated', note: DRAWING },
     centreX: { tol: 50, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     diameter: { tol: 20, source: 'Bosch pattern headlight', confidence: 'estimated', note: DRAWING },
@@ -585,6 +649,7 @@ export const HULL_META: MetaOf<typeof HULL> = {
     grilleSlotWidth: { tol: 8, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
   },
   exhaust: {
+    guardFlare: { tol: 30, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING },
     centreX: { tol: 50, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING },
     diameter: { tol: 20, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING },
     height: { tol: 50, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING },
@@ -605,6 +670,11 @@ export const HULL_META: MetaOf<typeof HULL> = {
     frontZ: { tol: 90, source: 'REF-drawing side view: guard edge ahead of the nose', confidence: 'estimated', note: DRAWING },
     rearZ: { tol: 90, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING },
     frontTriangleRun: { tol: 90, source: 'TIC-changes: triangular front sections from Jan 1943', confidence: 'estimated', note: DRAWING },
+    lipDepth: { tol: 30, source: 'REF-photo-1: folded outer lip', confidence: 'estimated', note: DRAWING },
+    lipThickness: { tol: 2, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    brackets: { tol: 2, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    bracketWidth: { tol: 30, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
+    bracketThickness: { tol: 4, source: 'REF-photo-1', confidence: 'estimated', note: DRAWING },
     rearTriangleRun: { tol: 70, source: 'REF-drawing side view', confidence: 'estimated', note: DRAWING },
   },
   sMineDischarger: {
@@ -624,7 +694,22 @@ export const HULL_META: MetaOf<typeof HULL> = {
   },
   interiorEdgeBand: { tol: 15, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING },
   edgeBand: { tol: 20, source: 'shader band, not a measured dimension', confidence: 'estimated', note: DRAWING },
+  rearPlate: {
+    crankPortWidth: { tol: 50, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    crankPortHeight: { tol: 40, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    crankPortCentreY: { tol: 90, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    crankPortBezel: { tol: 15, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    crankPortProud: { tol: 20, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    hitchWidth: { tol: 60, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    hitchHeight: { tol: 50, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    hitchCentreY: { tol: 90, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    hitchProud: { tol: 40, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    shackleCentreX: { tol: 90, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+    shackleCentreY: { tol: 90, source: REAR_ELEV, confidence: 'estimated', note: DRAWING },
+  },
   towPoint: {
+    height: { tol: 50, source: 'REF-photo-2: forged lugs on the nose', confidence: 'estimated', note: DRAWING },
+    eyeDiameter: { tol: 25, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     centreX: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     frontY: { tol: 40, source: 'REF-photo-2', confidence: 'estimated', note: DRAWING },
     rearY: { tol: 40, source: 'REF-drawing rear view', confidence: 'estimated', note: DRAWING },

@@ -1,13 +1,15 @@
 import { CatmullRomCurve3, Vector2, Vector3 } from 'three';
 import { Region, WEAR } from '../../geom/attributes.js';
-import { circle } from '../../geom/poly2.js';
-import { R, S, mm, type MM } from '../../spec/units.js';
+import { circle, roundedRect, translate } from '../../geom/poly2.js';
+import { R, S, SIDES, mm, sideSign, type MM } from '../../spec/units.js';
 import { ARMOUR } from '../../spec/armour.js';
 import { HULL } from '../../spec/hull.js';
 import { FEIFEL } from '../../spec/powertrain.js';
 import { emitRevolve } from '../../prims/lathe.js';
 import { emitSweep } from '../../prims/sweep.js';
+import { structuralPlate } from '../emit.js';
 import type { BuildContext, PartResult } from '../types.js';
+import { facingAft } from './frames.js';
 
 /**
  * Rear plate fittings: the Feifel air pre-cleaners and the exhaust stacks.
@@ -217,7 +219,124 @@ function buildFeifel(ctx: BuildContext): void {
   }
 
   buildIntakeManifold(ctx);
+  buildRearPlateFittings(ctx);
 }
+
+/**
+ * The crank port, the towing coupling and the corner shackles.
+ *
+ * The rear plate was a featureless slab. A Tiger's is not: the inertia starter
+ * is cranked through an oval port on the centreline, there is a heavy towing
+ * coupling below it, and a shackle lug at each lower corner.
+ */
+function buildRearPlateFittings(ctx: BuildContext): void {
+  const r = HULL.rearPlate;
+  const tilt = ARMOUR.hull.rear.angle;
+
+  /** A fitting standing proud of the rear plate at a given height. */
+  const onRearPlate = (y: MM, proud: MM): ReturnType<typeof facingAft> =>
+    facingAft(
+      mm(rearPlateOuterZ(y) - proud * Math.cos(R(tilt))),
+      y,
+      tilt,
+    );
+
+  // The oval crank port: a raised bezel with the opening through it.
+  structuralPlate(ctx, {
+    outline: roundedRect(
+      r.crankPortWidth,
+      r.crankPortHeight,
+      mm(r.crankPortHeight / 2),
+      REAR_CORNER_SEGMENTS,
+    ),
+    holes: [
+      roundedRect(
+        mm(r.crankPortWidth - r.crankPortBezel * 2),
+        mm(r.crankPortHeight - r.crankPortBezel * 2),
+        mm(r.crankPortHeight / 2 - r.crankPortBezel),
+        REAR_CORNER_SEGMENTS,
+      ),
+    ],
+    thickness: r.crankPortProud,
+    frame: onRearPlate(r.crankPortCentreY, r.crankPortProud),
+    chamfer: HULL.chamfer.side,
+    region: Region.Exterior,
+    materials: {
+      inner: 'armourPaintedExterior',
+      outer: 'armourPaintedExterior',
+      edge: 'armourPaintedExterior',
+    },
+    edgeBandWidth: HULL.interiorEdgeBand,
+  });
+
+  // The cover over it. Without one the port is an open hole looking straight
+  // into the engine bay's ivory paint, which reads as a bright white panel on
+  // the back of the tank.
+  structuralPlate(ctx, {
+    outline: roundedRect(
+      mm(r.crankPortWidth - r.crankPortBezel),
+      mm(r.crankPortHeight - r.crankPortBezel),
+      mm(r.crankPortHeight / 2 - r.crankPortBezel / 2),
+      REAR_CORNER_SEGMENTS,
+    ),
+    thickness: r.crankPortProud,
+    frame: onRearPlate(r.crankPortCentreY, mm(r.crankPortProud * 2)),
+    chamfer: HULL.chamfer.side,
+    region: Region.Exterior,
+    materials: {
+      inner: 'armourPaintedExterior',
+      outer: 'armourPaintedExterior',
+      edge: 'armourPaintedExterior',
+    },
+    wear: WEAR.handled,
+    edgeBandWidth: HULL.interiorEdgeBand,
+  });
+
+  // The towing coupling.
+  structuralPlate(ctx, {
+    outline: roundedRect(r.hitchWidth, r.hitchHeight, mm(r.hitchHeight / 3), REAR_CORNER_SEGMENTS),
+    holes: [circle(mm(r.hitchHeight / 4), REAR_CORNER_SEGMENTS * 2)],
+    thickness: r.hitchProud,
+    frame: onRearPlate(r.hitchCentreY, r.hitchProud),
+    chamfer: HULL.chamfer.structural,
+    region: Region.Exterior,
+    materials: {
+      inner: 'machinedSteel',
+      outer: 'machinedSteel',
+      edge: 'machinedSteel',
+    },
+    wear: WEAR.handled,
+    edgeBandWidth: HULL.interiorEdgeBand,
+  });
+
+  // A shackle lug at each lower corner, the same forging as the nose lugs.
+  const t = HULL.towPoint;
+  for (const side of SIDES) {
+    const x = mm(sideSign(side) * r.shackleCentreX);
+    structuralPlate(ctx, {
+      outline: translate(
+        roundedRect(t.width, t.height, mm(t.height / 3), REAR_CORNER_SEGMENTS),
+        x,
+        0,
+      ),
+      holes: [translate(circle(mm(t.eyeDiameter / 2), REAR_CORNER_SEGMENTS * 2), x, 0)],
+      thickness: t.thickness,
+      frame: onRearPlate(r.shackleCentreY, t.thickness),
+      chamfer: HULL.chamfer.structural,
+      region: Region.Exterior,
+      materials: {
+        inner: 'machinedSteel',
+        outer: 'machinedSteel',
+        edge: 'machinedSteel',
+      },
+      edgeBandWidth: HULL.interiorEdgeBand,
+    });
+  }
+}
+
+/** Segments around one rounded corner of a rear-plate fitting. */
+const REAR_CORNER_SEGMENTS = 5;
+
 
 /**
  * The Feifel intake manifold: the drum on the centreline that both trunks feed.
