@@ -5,6 +5,20 @@ import { OVERALL } from './overall.js';
 const STATIONS_PER_SIDE = 8;
 const WHEELS_PER_STATION = 3;
 
+/** Lateral planes the interleaved wheels occupy. Two stations' worth. */
+const WHEEL_PLANE_COUNT = 6;
+
+/** Width of one road wheel across its tyre. */
+const ROAD_WHEEL_WIDTH = 75;
+
+/**
+ * Clearance left between the outermost wheel rank and the track's edge.
+ *
+ * Enough for the rim bolt heads, which stand proud of the disc and were poking
+ * through the track guards when the rank pitch was set by hand.
+ */
+const WHEEL_RANK_CLEARANCE = 55;
+
 /** Shear modulus of spring steel, Pa. Used to derive the torsion bar rate. */
 export const STEEL_SHEAR_MODULUS = 79.3e9;
 
@@ -94,7 +108,7 @@ export const IDLER = {
 export const ROAD_WHEEL = {
   diameter: mm(800),
   /** Width of one wheel across its rubber tyre. */
-  width: mm(75),
+  width: mm(ROAD_WHEEL_WIDTH),
   /** Solid rubber tyre thickness on the Ausf. H wheel. Steel-rimmed wheels arrive Feb 1944. */
   tyreThickness: mm(65),
   /** How far the steel disc is set in from the tyre's outer face, each side. */
@@ -151,8 +165,29 @@ export const SUSPENSION = {
    * wheel of each axle was removable (16 per vehicle) implies a different
    * grouping. Held as data so a drawing corrects it without touching code.
    */
-  wheelPlanePitch: mm(78),
-  wheelPlaneCount: 6,
+  /**
+   * Widened so the six planes span the TRACK, not just the middle of it.
+   *
+   * At 78 mm the planes were packed nose to tail — six 75 mm wheels touching,
+   * 468 mm across a 725 mm track, leaving 130 mm of bare track outboard of the
+   * outermost rank. That is not how a Tiger looks: its wheels reach very nearly
+   * the full width of the track, which is most of why the running gear reads as
+   * a solid wall of steel rather than as a row of discs.
+   *
+   * At 130 mm each axle's three wheels sit 260 mm apart with 185 mm gaps, and
+   * the neighbouring axle's three drop into those gaps. Six planes then span
+   * 5 x 130 + 75 = 725 mm exactly, which is the track's width.
+   *
+   * DERIVED from the track's width rather than chosen, so the outermost rank
+   * cannot grow past the track it runs on — set by hand at 130 mm it did, and
+   * the rim bolts stood proud of the track guards.
+   *
+   * Still UNCERTAINTY #9 — the rank assignment is geometry, not a source.
+   */
+  wheelPlanePitch: mm(
+    (TRACK.width - ROAD_WHEEL_WIDTH - WHEEL_RANK_CLEARANCE * 2) / (WHEEL_PLANE_COUNT - 1),
+  ),
+  wheelPlaneCount: WHEEL_PLANE_COUNT,
 
   /** Standoff of the swing arms' plane from the lower hull side. */
   armStandoff: mm(40),
