@@ -7,7 +7,6 @@ import { ARMOUR } from '../../spec/armour.js';
 import { HULL } from '../../spec/hull.js';
 import {
   TURRET,
-  TURRET_BUSTLE_START_Z,
   TURRET_FRONT_PLATE_WIDTH,
 } from '../../spec/turret.js';
 import { structuralPlate } from '../emit.js';
@@ -29,8 +28,11 @@ import { facingForward, facingUp } from '../hull/frames.js';
  * became the escape hatch in December 1942.
  */
 
-/** Segments around the bustle's curve. */
-const BUSTLE_SEGMENTS = 26;
+/** Stations along the swelling front section of the turret's side. */
+const FRONT_SEGMENTS = 14;
+
+/** Stations around the blunt tail. */
+const REAR_SEGMENTS = 18;
 
 /** Segments on a circular aperture in the roof. */
 const APERTURE_SEGMENTS = 28;
@@ -53,23 +55,48 @@ const WALL_TOP_Y: MM = mm(RING_Y + TURRET.shell.interiorHeight);
  * no chance of the two disagreeing about where the turret is.
  */
 function horseshoe(outset: number): Poly2 {
-  const halfWidth = TURRET.shell.width / 2 + outset;
-  const run = TURRET.shell.bustleRun + outset;
-  const bustleZ = TURRET.ring.centreZ + TURRET_BUSTLE_START_Z;
+  const shell = TURRET.shell;
+  // Both ends move INWARD by the outset, so the inner outline is shorter at the
+  // front AND at the tail. Shrinking a single length from the front alone left
+  // the two outlines sharing a tail and the wall had no thickness there.
+  const frontZ = mm(FRONT_Z + outset);
+  const rearZ = mm(FRONT_Z - shell.length - outset);
+  const frontHalf = shell.frontPlateWidth / 2 + outset;
+  const maxHalf = shell.width / 2 + outset;
+  const widestZ = mm(frontZ - (frontZ - rearZ) * shell.widestAtFraction);
 
-  const pts: Vector2[] = [
-    v2(mm(-halfWidth), mm(FRONT_Z + outset)),
-    v2(mm(halfWidth), mm(FRONT_Z + outset)),
-    v2(mm(halfWidth), mm(bustleZ)),
-  ];
-  // An ELLIPTICAL quarter each side, not a semicircle: the bustle closes in
-  // 573 mm where a half-round of this width would take 1,085. Full width at
-  // t = 0, meeting on the centreline at t = 90 degrees.
-  for (let i = 1; i < BUSTLE_SEGMENTS; i++) {
-    const t = (i / BUSTLE_SEGMENTS) * Math.PI;
-    pts.push(v2(mm(halfWidth * Math.cos(t)), mm(bustleZ - run * Math.sin(t))));
+  const side: Vector2[] = [];
+
+  // Front section: the sides swell from the front plate's corners out to the
+  // widest point. Eased at both ends — a plain ellipse quadrant has zero slope
+  // at one end and maximum slope at the other, which puts a visible crease
+  // either where it leaves the front plate or where it reaches full width.
+  for (let i = 0; i <= FRONT_SEGMENTS; i++) {
+    const t = i / FRONT_SEGMENTS;
+    const eased = t * t * (3 - 2 * t);
+    const z = frontZ - (frontZ - widestZ) * t;
+    side.push(v2(mm(frontHalf + (maxHalf - frontHalf) * eased), mm(z)));
   }
-  pts.push(v2(mm(-halfWidth), mm(bustleZ)));
+
+  // Rear section: parameterised by ANGLE, not by station, so the tail is BLUNT.
+  // Sampling the width as a function of z instead makes the curve meet the
+  // centreline at a finite angle and the turret comes to a point — it rendered
+  // as an arrowhead.
+  const rearRun = widestZ - rearZ;
+  for (let i = 1; i <= REAR_SEGMENTS; i++) {
+    const theta = (i / REAR_SEGMENTS) * (Math.PI / 2);
+    side.push(
+      v2(mm(maxHalf * Math.cos(theta)), mm(widestZ - rearRun * Math.sin(theta))),
+    );
+  }
+
+  // Port front corner, down the starboard side and round the tail, then back up
+  // the port side. The tail point is shared, so it is not mirrored.
+  const pts: Vector2[] = [v2(mm(-frontHalf), frontZ), ...side];
+  for (let i = side.length - 2; i >= 1; i--) {
+    const q = side[i]!;
+    pts.push(v2(mm(-q.x), mm(q.y)));
+  }
   return pts;
 }
 

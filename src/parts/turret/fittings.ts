@@ -6,7 +6,7 @@ import { R, S, SIDES, mm, sideSign, type MM, type Side } from '../../spec/units.
 import { ARMOUR } from '../../spec/armour.js';
 import { HULL } from '../../spec/hull.js';
 import { TRACK } from '../../spec/runningGear.js';
-import { TURRET, TURRET_BUSTLE_START_Z } from '../../spec/turret.js';
+import { TURRET } from '../../spec/turret.js';
 import { structuralPlate } from '../emit.js';
 import type { BuildContext, PartResult } from '../types.js';
 import { facingOutboard, facingUp } from '../hull/frames.js';
@@ -34,7 +34,7 @@ const ROOF_Y: MM = mm(RING_Y + TURRET.shell.interiorHeight + ARMOUR.turret.roof.
 
 /** Aftmost point of the turret, on the centreline. */
 const REAR_Z: MM = mm(
-  TURRET.ring.centreZ + TURRET_BUSTLE_START_Z - TURRET.shell.bustleRun,
+  TURRET.ring.centreZ + TURRET.shell.frontOverhang - TURRET.shell.length,
 );
 
 /**

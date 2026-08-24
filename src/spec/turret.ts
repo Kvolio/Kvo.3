@@ -1,6 +1,5 @@
 import { mm, deg, port, starboard, type MM } from './units.js';
 import type { MetaOf } from './meta.js';
-import { ARMOUR } from './armour.js';
 
 /**
  * Turret and commander's cupola.
@@ -42,7 +41,7 @@ export const TURRET = {
      * Overall external length of the turret, front plate to rear plate.
      * Measured off the 1:50 plan view.
      */
-    length: mm(2312),
+    length: mm(2470),
     /**
      * External width across the turret sides.
      *
@@ -53,7 +52,25 @@ export const TURRET = {
      * outboard of the bearing. `tests/spec/turretFit.test.ts` now asserts the
      * relationship so it cannot come back.
      */
-    width: mm(2400),
+    width: mm(2550),
+    /**
+     * Width of the FLAT FRONT PLATE, which is much narrower than the turret's
+     * widest point.
+     *
+     * This is the fact that makes a Tiger turret a Tiger turret, and getting it
+     * wrong is what made this one read as a rectangular box to two critics
+     * independently. The front plate is 1,910 mm; the sides then BULGE OUTWARD
+     * from its corners to 2,550 mm at about 47 per cent of the turret's length
+     * before curving in to the rear. There are no straight parallel sides and
+     * no square front corners anywhere on it.
+     *
+     * Derived from the shell's width it came out at 2,240 mm — flat across
+     * almost the whole front, which is a box with a rounded back.
+     */
+    frontPlateWidth: mm(1910),
+    /** Where along the turret the sides reach their widest, as a fraction. */
+    widestAtFraction: 0.47,
+
     /**
      * How deep the rear bustle's curve is, front to back.
      *
@@ -96,9 +113,16 @@ export const TURRET = {
     hatchDiameter: mm(480),
     hatchThickness: mm(60),
     hatchOpenAngle: deg(105),
-    /** Cupola centre offset from the turret ring centre. Sits left and rear. */
-    centreX: port(mm(500)),
-    centreZ: mm(-820),
+    /**
+     * Cupola centre, relative to the turret ring. Port and aft of centre.
+     *
+     * MEASURED off the plan view rather than estimated. At -820 it sat far
+     * enough back that, once the turret's sides were corrected to bulge and
+     * taper properly, the cupola's aperture punched out through the narrowing
+     * rear wall — the plate primitive refused to cut it and said so.
+     */
+    centreX: port(mm(520)),
+    centreZ: mm(-646),
   },
 
   /**
@@ -120,11 +144,16 @@ export const TURRET = {
      * bolted on, which is what the owner correctly objected to.
      */
     width: mm(1412),
-    height: mm(567),
+    /**
+     * Three quarters of the turret's height, measured off the front elevation.
+     * At 567 it left a broad band of bare front plate above and below and read
+     * as a panel rather than as the casting that dominates a Tiger's face.
+     */
+    height: mm(640),
     /** Corner radius of the slab. Generous: this is sand-cast, not flame-cut. */
     cornerRadius: mm(170),
     /** How far the slab stands proud of the front plate. */
-    proud: mm(150),
+    proud: mm(190),
     /** The raised boss around the tube, and how far it stands proud again. */
     bossDiameter: mm(707),
     bossProud: mm(130),
@@ -175,8 +204,9 @@ export const TURRET = {
     cornerRadius: mm(130),
     thickness: mm(25),
     openAngle: deg(100),
-    centreX: starboard(mm(520)),
-    centreZ: mm(-560),
+    /** Measured off the plan view, like the cupola's. */
+    centreX: starboard(mm(648)),
+    centreZ: mm(-126),
   },
 
   /** Ausstiegluke, right side of the turret rear. Added December 1942. */
@@ -258,14 +288,15 @@ export const TURRET = {
 } as const;
 
 /**
- * Width of the front plate: it spans BETWEEN the side plates' inner faces, so
- * it follows from the shell and the side armour rather than being a third
- * number to keep in step with them. Carried separately it was 1,700 mm against
- * a 2,010 mm gap, and rendered as a panel floating in a hole.
+ * Width of the front plate.
+ *
+ * Was derived as the shell's width less two side plates, on the assumption that
+ * the sides were straight and the front spanned between them. They are not: the
+ * sides bulge outward from the front plate's corners, so the front is 640 mm
+ * narrower than the turret's widest point and the figure has to be measured
+ * rather than derived.
  */
-export const TURRET_FRONT_PLATE_WIDTH: MM = mm(
-  TURRET.shell.width - ARMOUR.turret.side.thickness * 2,
-);
+export const TURRET_FRONT_PLATE_WIDTH: MM = TURRET.shell.frontPlateWidth;
 
 /** How far the turret reaches AFT of the ring centre. The bustle. */
 export const TURRET_REAR_OVERHANG: MM = mm(
@@ -320,6 +351,8 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
   shell: {
     length: { tol: 110, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     width: { tol: 110, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    frontPlateWidth: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    widestAtFraction: { tol: 0.08, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     bustleRun: { tol: 80, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     frontOverhang: { tol: 120, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     interiorHeight: {
@@ -367,8 +400,8 @@ export const TURRET_META: MetaOf<typeof TURRET> = {
     cornerRadius: { tol: 40, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
     thickness: { tol: 5, source: 'matches turret roof thickness', confidence: 'estimated', note: DRAWING_ESTIMATE },
     openAngle: { tol: 10, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
-    centreX: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING_ESTIMATE },
-    centreZ: { tol: 30, source: 'REF-drawing plan view', confidence: 'estimated', note: DRAWING_ESTIMATE },
+    centreX: { tol: 70, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
+    centreZ: { tol: 90, source: MEASURED_PLAN, confidence: 'estimated', note: DRAWING_ESTIMATE },
   },
   escapeHatch: {
     width: { tol: 30, source: 'REF-drawing', confidence: 'estimated', note: DRAWING_ESTIMATE },
